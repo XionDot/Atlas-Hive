@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktopie - Advanced macOS System Monitor & Privacy Manager</title>
+    <meta name="description" content="Desktopie is a powerful macOS menu bar app for system monitoring, task management, and privacy control. Monitor CPU, memory, network, and more.">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 60px 0 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tagline {
+            font-size: 24px;
+            font-weight: 300;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Main Content */
+        main {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 60px 0;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            transition: transform 0.3s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .feature p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Screenshots Section */
+        .screenshots {
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .screenshots h2 {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        .screenshot-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 300px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .screenshot-item h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .screenshot-item p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* System Requirements */
+        .requirements {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 60px 0;
+        }
+
+        .requirements h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .requirements ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .requirements li {
+            padding: 10px 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .requirements li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer p {
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+
+        .social-links {
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 36px;
+            }
+
+            .tagline {
+                font-size: 18px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .screenshot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo">⚡ Desktopie</h1>
+            <p class="tagline">Advanced System Monitor & Privacy Manager for macOS</p>
+            <a href="#download" class="cta-button">Download for Free</a>
+            <p style="margin-top: 20px; opacity: 0.8;">macOS 13.0 or later • Apple Silicon & Intel</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="features">
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Monitoring</h3>
+                    <p>Track CPU, memory, network, disk, and battery usage in real-time. Customizable menu bar display with graphs and statistics.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy Controls</h3>
+                    <p>One-click privacy management. Revoke camera and microphone permissions for all apps instantly with TCC database control.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Task Manager</h3>
+                    <p>Built-in task manager with process monitoring, sorting, searching, and the ability to kill or restart any process.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Customizable Interface</h3>
+                    <p>Drag-and-drop section reordering, theme switching (Light/Dark/System), and configurable menu bar indicators.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Lightweight & Fast</h3>
+                    <p>Optimized for performance with minimal resource usage. Native SwiftUI interface that feels right at home on macOS.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Highly Configurable</h3>
+                    <p>Choose what to display in your menu bar, adjust update intervals, customize sections, and more.</p>
+                </div>
+            </section>
+
+            <section class="screenshots">
+                <h2>Screenshots</h2>
+                <div class="screenshot-grid">
+                    <div class="screenshot-item">
+                        <div class="screenshot-placeholder">Dashboard View</div>
+                        <h4>System Dashboard</h4>
+                        <p>Monitor all your system metrics in one beautiful interface</p>
+                    </div>
+                    <div class="screenshot-item">
+                        <div class="screenshot-placeholder">Task Manager</div>
+                        <h4>Built-in Task Manager</h4>
+                        <p>Manage processes with sortable columns and quick actions</p>
+                    </div>
+                    <div class="screenshot-item">
+                        <div class="screenshot-placeholder">Privacy Controls</div>
+                        <h4>Privacy Manager</h4>
+                        <p>Control camera and microphone permissions system-wide</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="requirements">
+                <h2>System Requirements</h2>
+                <ul>
+                    <li>macOS 13.0 (Ventura) or later</li>
+                    <li>Apple Silicon (M1/M2/M3) or Intel processor</li>
+                    <li>10 MB of available disk space</li>
+                    <li>Administrator privileges for privacy features</li>
+                </ul>
+            </section>
+
+            <section id="download" style="text-align: center; padding: 60px 0;">
+                <h2 style="font-size: 36px; margin-bottom: 20px;">Ready to Get Started?</h2>
+                <p style="font-size: 18px; color: #666; margin-bottom: 30px;">Download Desktopie and take control of your Mac</p>
+                <a href="https://github.com/ahmedzitoun/desktopie/releases/latest" class="cta-button">Download Desktopie 1.0.0</a>
+                <p style="margin-top: 20px; color: #999; font-size: 14px;">Free • Open Source • No tracking or ads</p>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Desktopie by Ahmed Zitoun. All rights reserved.</p>
+            <p>Licensed under MIT License</p>
+            <div class="social-links">
+                <a href="https://github.com/ahmedzitoun/desktopie">GitHub</a>
+                <a href="mailto:support@desktopie.app">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

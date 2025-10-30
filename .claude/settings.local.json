@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./build_app.sh:*)",
+      "Bash(./install.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
