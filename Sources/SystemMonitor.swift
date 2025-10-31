@@ -227,9 +227,21 @@ class SystemMonitor: ObservableObject {
         let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int ?? -1
         let isCharging = description[kIOPSIsChargingKey] as? Bool ?? false
 
-        // Battery health - would need IOKit framework for detailed health metrics
-        // Defaulting to 100% for now (future enhancement)
-        let health = 100
+        // Calculate battery health from IOKit power source data
+        // Health = (Current Max Capacity / Original Design Capacity) * 100
+        let maxCapacity = description[kIOPSMaxCapacityKey] as? Int ?? 100
+
+        // Try different keys to get design capacity
+        var designCapacity = maxCapacity // Default to max if design not available
+
+        if let design = description["DesignCapacity"] as? Int, design > 0 {
+            designCapacity = design
+        } else if let design = description["AppleRawMaxCapacity"] as? Int, design > 0 {
+            designCapacity = design
+        }
+
+        // Calculate health percentage (capped at 100%)
+        let health = designCapacity > 0 ? min(100, (maxCapacity * 100) / designCapacity) : 100
 
         return (currentCapacity, isCharging, health)
     }
