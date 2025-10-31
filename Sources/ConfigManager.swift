@@ -19,7 +19,7 @@ enum ViewMode: String, Codable {
 struct Config: Codable {
     var showCPUInMenuBar: Bool = false
     var showMemoryInMenuBar: Bool = false
-    var showNetworkInMenuBar: Bool = true
+    var showNetworkInMenuBar: Bool = false  // Disabled - causes crashes
     var showMiniGraphInMenuBar: Bool = false
     var showGraphs: Bool = true
     var updateInterval: Double = 2.0

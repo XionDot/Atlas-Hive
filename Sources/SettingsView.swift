@@ -66,7 +66,7 @@ struct SettingsView: View {
                         if !configManager.config.showMiniGraphInMenuBar {
                             Toggle("Show CPU Usage", isOn: $configManager.config.showCPUInMenuBar)
                             Toggle("Show Memory Usage", isOn: $configManager.config.showMemoryInMenuBar)
-                            Toggle("Show Network Speed", isOn: $configManager.config.showNetworkInMenuBar)
+                            // Network speed option removed - causes crashes in menu bar
                         }
 
                         VStack(alignment: .leading, spacing: 8) {

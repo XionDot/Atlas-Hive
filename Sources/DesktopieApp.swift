@@ -185,8 +185,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let cpuUsage = monitor.getCPUUsage()
         let (memoryUsage, _, _) = monitor.getMemoryInfo()
-        let downloadSpeed = monitor.networkDownload
-        let uploadSpeed = monitor.networkUpload
 
         let config = configManager?.config ?? Config.default
 
@@ -204,9 +202,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if config.showMemoryInMenuBar {
                 displayText += String(format: "MEM: %.0f%% ", memoryUsage)
             }
-            if config.showNetworkInMenuBar {
-                displayText += formatNetworkSpeed(downloadSpeed, uploadSpeed)
-            }
+            // Network speed display removed - causes crashes
 
             if displayText.isEmpty {
                 // Show custom icon when no stats selected
