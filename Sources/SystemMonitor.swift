@@ -210,12 +210,12 @@ class SystemMonitor: ObservableObject {
         let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
 
         guard let source = sources.first else {
-            return (100, false)
+            return (-1, false)  // No battery (desktop)
         }
 
         let description = IOPSGetPowerSourceDescription(snapshot, source).takeUnretainedValue() as! [String: Any]
 
-        let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int ?? 100
+        let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int ?? -1
         let isCharging = description[kIOPSIsChargingKey] as? Bool ?? false
 
         return (currentCapacity, isCharging)

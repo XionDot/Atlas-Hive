@@ -66,12 +66,12 @@ struct SimplifiedMonitorView: View {
                 )
 
                 // Battery Status (if available)
-                if monitor.batteryLevel >= 0 {
+                if monitor.batteryLevel > 0 && monitor.batteryLevel < 100 {
                     StatusCard(
                         icon: batteryIcon(),
                         title: "Battery",
                         status: monitor.isCharging ? "Charging" : batteryStatusText(),
-                        value: String(format: "%.0f%%", monitor.batteryLevel),
+                        value: String(format: "%.0f%%", Double(monitor.batteryLevel)),
                         color: batteryColor()
                     )
                 }
