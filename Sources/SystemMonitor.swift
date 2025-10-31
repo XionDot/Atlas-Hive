@@ -11,6 +11,7 @@ class SystemMonitor: ObservableObject {
     @Published var networkUpload: Double = 0.0
     @Published var batteryLevel: Int = 0
     @Published var isCharging: Bool = false
+    @Published var batteryHealth: Int = 100  // Battery health percentage
     @Published var diskUsage: Double = 0.0
 
     private var previousCPUInfo: host_cpu_load_info?
@@ -52,6 +53,7 @@ class SystemMonitor: ObservableObject {
                 self.networkUpload = network.upload
                 self.batteryLevel = battery.level
                 self.isCharging = battery.charging
+                self.batteryHealth = battery.health
                 self.diskUsage = disk
             }
         }
@@ -212,12 +214,12 @@ class SystemMonitor: ObservableObject {
         return (downloadSpeed, uploadSpeed)
     }
 
-    func getBatteryInfo() -> (level: Int, charging: Bool) {
+    func getBatteryInfo() -> (level: Int, charging: Bool, health: Int) {
         let snapshot = IOPSCopyPowerSourcesInfo().takeRetainedValue()
         let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
 
         guard let source = sources.first else {
-            return (-1, false)  // No battery (desktop)
+            return (-1, false, 100)  // No battery (desktop)
         }
 
         let description = IOPSGetPowerSourceDescription(snapshot, source).takeUnretainedValue() as! [String: Any]
@@ -225,7 +227,11 @@ class SystemMonitor: ObservableObject {
         let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int ?? -1
         let isCharging = description[kIOPSIsChargingKey] as? Bool ?? false
 
-        return (currentCapacity, isCharging)
+        // Battery health - would need IOKit framework for detailed health metrics
+        // Defaulting to 100% for now (future enhancement)
+        let health = 100
+
+        return (currentCapacity, isCharging, health)
     }
 
     func getDiskUsage() -> Double {

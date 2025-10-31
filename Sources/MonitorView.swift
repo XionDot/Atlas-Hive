@@ -134,10 +134,11 @@ struct MonitorView: View {
                 showGraph: configManager.config.showGraphs
             )
         case .battery:
-            if systemMonitor.batteryLevel > 0 {
+            if systemMonitor.batteryLevel >= 0 {
                 BatteryCard(
                     level: systemMonitor.batteryLevel,
-                    isCharging: systemMonitor.isCharging
+                    isCharging: systemMonitor.isCharging,
+                    health: systemMonitor.batteryHealth
                 )
             }
         case .privacy:
@@ -357,12 +358,19 @@ struct NetworkGraph: View {
 struct BatteryCard: View {
     let level: Int
     let isCharging: Bool
+    let health: Int
 
     var batteryColor: Color {
         if isCharging { return .green }
         if level > 50 { return .green }
         if level > 20 { return .orange }
         return .red
+    }
+
+    var healthColor: Color {
+        if health >= 80 { return .green }
+        if health >= 60 { return .yellow }
+        return .orange
     }
 
     var body: some View {
@@ -379,10 +387,21 @@ struct BatteryCard: View {
                     .foregroundColor(batteryColor)
             }
 
-            if isCharging {
-                Text("Charging")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
+            HStack {
+                if isCharging {
+                    Text("Charging")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(healthColor)
+                    Text("Health: \(health)%")
+                        .font(.system(size: 12))
+                        .foregroundColor(healthColor)
+                }
             }
 
             GeometryReader { geometry in

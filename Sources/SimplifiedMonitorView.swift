@@ -75,8 +75,8 @@ struct SimplifiedMonitorView: View {
                     color: colorForPercentage(monitor.diskUsage)
                 )
 
-                // Battery Status (if available)
-                if monitor.batteryLevel > 0 && monitor.batteryLevel < 100 {
+                // Battery Status (if available on laptops)
+                if monitor.batteryLevel >= 0 {
                     StatusCard(
                         icon: batteryIcon(),
                         title: "Battery",
