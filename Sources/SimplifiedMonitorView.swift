@@ -24,6 +24,16 @@ struct SimplifiedMonitorView: View {
                     .foregroundColor(.blue)
                 }
                 .buttonStyle(.plain)
+
+                Button(action: {
+                    NSApplication.shared.terminate(nil)
+                }) {
+                    Image(systemName: "power")
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+                .help("Quit Desktopie")
             }
             .padding(.bottom, 8)
 
