@@ -191,16 +191,23 @@ class SystemMonitor: ObservableObject {
         var downloadSpeed: Double = 0
         var uploadSpeed: Double = 0
 
-        if previousNetworkBytes.rx > 0 && timeDiff > 0 {
-            let rxDiff = Double(downloadBytes) - Double(previousNetworkBytes.rx)
-            let txDiff = Double(uploadBytes) - Double(previousNetworkBytes.tx)
+        // Only calculate if we have previous data and sufficient time has passed
+        if previousNetworkBytes.rx > 0 && timeDiff > 0.5 {
+            let rxDiff = Double(Int64(downloadBytes) - Int64(previousNetworkBytes.rx))
+            let txDiff = Double(Int64(uploadBytes) - Int64(previousNetworkBytes.tx))
 
-            downloadSpeed = max(0, rxDiff / timeDiff)
-            uploadSpeed = max(0, txDiff / timeDiff)
+            // Only update if the difference is positive (no counter wrap)
+            if rxDiff >= 0 && txDiff >= 0 {
+                downloadSpeed = rxDiff / timeDiff
+                uploadSpeed = txDiff / timeDiff
+            }
         }
 
-        previousNetworkBytes = (rx: downloadBytes, tx: uploadBytes)
-        lastUpdateTime = currentTime
+        // Always update for next calculation
+        if timeDiff > 0.5 {
+            previousNetworkBytes = (rx: downloadBytes, tx: uploadBytes)
+            lastUpdateTime = currentTime
+        }
 
         return (downloadSpeed, uploadSpeed)
     }

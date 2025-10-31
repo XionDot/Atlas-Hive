@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var configManager: ConfigManager
+    @StateObject private var taskManager = TaskManager()
 
     var body: some View {
         Group {
@@ -17,9 +18,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $configManager.showTaskManager) {
             if configManager.config.viewMode == .simple {
-                SimplifiedTaskManagerView(taskManager: TaskManager(), configManager: configManager)
+                SimplifiedTaskManagerView(taskManager: taskManager, configManager: configManager)
             } else {
-                TaskManagerView(taskManager: TaskManager())
+                TaskManagerView(taskManager: taskManager)
             }
         }
     }
