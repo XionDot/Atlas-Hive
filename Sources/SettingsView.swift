@@ -22,6 +22,36 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // View Mode Section
+                    SettingsSection(title: "View Mode", icon: "eye") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Choose your preferred interface style")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+
+                            Picker("Mode", selection: $configManager.config.viewMode) {
+                                Label("Simple", systemImage: "square.grid.2x2")
+                                    .tag(ViewMode.simple)
+                                Label("Advanced", systemImage: "slider.horizontal.3")
+                                    .tag(ViewMode.advanced)
+                            }
+                            .pickerStyle(.segmented)
+
+                            Group {
+                                if configManager.config.viewMode == .simple {
+                                    Text("• Clean, easy-to-understand interface\n• Status-based indicators (Good/Moderate/High)\n• Simple app management")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("• Detailed metrics and graphs\n• Full process list with all details\n• Advanced customization options")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
+
                     // Menu Bar Section
                     SettingsSection(title: "Menu Bar", icon: "menubar.rectangle") {
                         Toggle("Show Mini Graph", isOn: $configManager.config.showMiniGraphInMenuBar)
@@ -50,19 +80,34 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Display Section
-                    SettingsSection(title: "Display", icon: "chart.xyaxis.line") {
-                        Toggle("Show Graphs", isOn: $configManager.config.showGraphs)
+                    // Display Section (only show in advanced mode)
+                    if configManager.config.viewMode == .advanced {
+                        SettingsSection(title: "Display", icon: "chart.xyaxis.line") {
+                            Toggle("Show Graphs", isOn: $configManager.config.showGraphs)
 
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Theme")
-                                .font(.system(size: 12))
-                            Picker("Theme", selection: $configManager.config.theme) {
-                                Text("System").tag("system")
-                                Text("Light").tag("light")
-                                Text("Dark").tag("dark")
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Theme")
+                                    .font(.system(size: 12))
+                                Picker("Theme", selection: $configManager.config.theme) {
+                                    Text("System").tag("system")
+                                    Text("Light").tag("light")
+                                    Text("Dark").tag("dark")
+                                }
+                                .pickerStyle(.segmented)
                             }
-                            .pickerStyle(.segmented)
+                        }
+                    } else {
+                        SettingsSection(title: "Appearance", icon: "paintbrush") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Theme")
+                                    .font(.system(size: 12))
+                                Picker("Theme", selection: $configManager.config.theme) {
+                                    Text("System").tag("system")
+                                    Text("Light").tag("light")
+                                    Text("Dark").tag("dark")
+                                }
+                                .pickerStyle(.segmented)
+                            }
                         }
                     }
 

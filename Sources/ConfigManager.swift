@@ -11,6 +11,11 @@ enum MetricSection: String, Codable, CaseIterable {
     case privacy = "Privacy"
 }
 
+enum ViewMode: String, Codable {
+    case simple = "simple"
+    case advanced = "advanced"
+}
+
 struct Config: Codable {
     var showCPUInMenuBar: Bool = false
     var showMemoryInMenuBar: Bool = false
@@ -20,6 +25,7 @@ struct Config: Codable {
     var updateInterval: Double = 2.0
     var theme: String = "system"
     var sectionOrder: [MetricSection] = [.cpu, .memory, .network, .disk, .battery, .privacy]
+    var viewMode: ViewMode = .simple
 
     static let `default` = Config()
 }

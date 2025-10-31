@@ -35,6 +35,49 @@ struct TaskManagerView: View {
             .padding()
             .background(Color.accentColor.opacity(0.1))
 
+            // System summary
+            HStack(spacing: 16) {
+                // Total CPU
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Total CPU")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Text(String(format: "%.1f%%", taskManager.totalCPU))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.blue)
+                }
+
+                Divider()
+                    .frame(height: 30)
+
+                // Total Memory
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Total Memory")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Text(String(format: "%.0f MB", taskManager.totalMemory))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.green)
+                }
+
+                Spacer()
+
+                // Process count
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Processes")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Text("\(taskManager.processes.count)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.purple)
+                }
+            }
+            .padding()
+            .background(Color.blue.opacity(0.05))
+            .cornerRadius(8)
+            .padding(.horizontal)
+            .padding(.top, 8)
+
             // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")

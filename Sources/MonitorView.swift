@@ -14,6 +14,20 @@ struct MonitorView: View {
                 Text("Desktopie")
                     .font(.system(size: 18, weight: .bold))
                 Spacer()
+
+                Button(action: {
+                    configManager.config.viewMode = .simple
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "square.grid.2x2")
+                        Text("Simple")
+                    }
+                    .font(.system(size: 11))
+                    .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .help("Switch to Simple Mode")
+
                 Button(action: {
                     withAnimation {
                         isReorderMode.toggle()
@@ -83,12 +97,6 @@ struct MonitorView: View {
             }
         }
         .frame(width: 360, height: 480)
-        .sheet(isPresented: $configManager.showSettings) {
-            SettingsView(configManager: configManager)
-        }
-        .sheet(isPresented: $configManager.showTaskManager) {
-            TaskManagerView(taskManager: TaskManager())
-        }
     }
 
     @ViewBuilder

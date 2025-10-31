@@ -22,6 +22,8 @@ class TaskManager: ObservableObject {
     @Published var processes: [ProcessData] = []
     @Published var sortBy: SortOption = .cpu
     @Published var searchText: String = ""
+    @Published var totalCPU: Double = 0.0
+    @Published var totalMemory: Double = 0.0
 
     private var updateTimer: Timer?
 
@@ -49,8 +51,14 @@ class TaskManager: ObservableObject {
 
             let processes = self.getAllProcesses()
 
+            // Calculate totals
+            let cpuTotal = processes.reduce(0.0) { $0 + $1.cpuUsage }
+            let memoryTotal = processes.reduce(0.0) { $0 + $1.memoryMB }
+
             DispatchQueue.main.async {
                 self.processes = processes
+                self.totalCPU = cpuTotal
+                self.totalMemory = memoryTotal
             }
         }
     }
@@ -189,6 +197,10 @@ class TaskManager: ObservableObject {
         case .memory:
             processes.sort { $0.memoryMB > $1.memoryMB }
         }
+    }
+
+    func refreshProcesses() {
+        updateProcessList()
     }
 
     var filteredProcesses: [ProcessData] {
