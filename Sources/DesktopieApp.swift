@@ -276,51 +276,54 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func createDefaultMenuBarIcon() -> NSImage {
+        // Using alert_status icon as final choice
+        let iconName = "alert_status_menubar"
+
+        // Try to load from Resources folder (for installed app)
+        if let resourcePath = Bundle.main.resourcePath {
+            let iconPath = "\(resourcePath)/menubar_icons/\(iconName)@2x.png"
+            if let image = NSImage(contentsOfFile: iconPath) {
+                // Set the size to 18x18 for menu bar, macOS will use the @2x for retina
+                image.size = NSSize(width: 18, height: 18)
+                image.isTemplate = true
+                return image
+            }
+        }
+
+        // Fallback: restore original circular gauge icon
         let size: CGFloat = 18
         let image = NSImage(size: NSSize(width: size, height: size))
-
         image.lockFocus()
 
-        // Clear background
         NSColor.clear.setFill()
         NSBezierPath(rect: NSRect(x: 0, y: 0, width: size, height: size)).fill()
 
-        // Draw a circular gauge/activity monitor style icon
         let centerX = size / 2
         let centerY = size / 2
         let radius: CGFloat = 7
 
-        // Draw outer circle
         let outerCircle = NSBezierPath()
-        outerCircle.appendArc(
-            withCenter: NSPoint(x: centerX, y: centerY),
-            radius: radius,
-            startAngle: 0,
-            endAngle: 360
-        )
+        outerCircle.appendArc(withCenter: NSPoint(x: centerX, y: centerY), radius: radius, startAngle: 0, endAngle: 360)
         NSColor.labelColor.withAlphaComponent(0.6).setStroke()
         outerCircle.lineWidth = 1.5
         outerCircle.stroke()
 
-        // Draw inner activity bars (like a simplified activity monitor)
         let barCount = 4
         let barSpacing: CGFloat = 1.5
         let barWidth: CGFloat = 1.2
-        let barHeights: [CGFloat] = [4, 6, 5, 3] // Varying heights for visual interest
+        let barHeights: [CGFloat] = [4, 6, 5, 3]
 
         for i in 0..<barCount {
             let x = centerX - (CGFloat(barCount) * (barWidth + barSpacing)) / 2 + CGFloat(i) * (barWidth + barSpacing) + barSpacing
             let height = barHeights[i]
             let y = centerY - height / 2
-
             let barRect = NSRect(x: x, y: y, width: barWidth, height: height)
             NSColor.labelColor.withAlphaComponent(0.7).setFill()
             NSBezierPath(rect: barRect).fill()
         }
 
         image.unlockFocus()
-
-        image.isTemplate = true  // Use template mode for proper light/dark mode support
+        image.isTemplate = true
         return image
     }
 }
