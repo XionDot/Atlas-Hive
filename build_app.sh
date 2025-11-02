@@ -27,10 +27,20 @@ cp Info.plist "$CONTENTS_DIR/"
 
 # Copy app icon
 echo "Copying app icon..."
-if [ -d "Resources/AppIcon.appiconset" ]; then
+if [ -f "Resources/AppIcon.icns" ]; then
+    cp "Resources/AppIcon.icns" "$RESOURCES_DIR/"
+    echo "✓ AppIcon.icns copied"
+elif [ -d "Resources/AppIcon.appiconset" ]; then
     cp -r Resources/AppIcon.appiconset "$RESOURCES_DIR/"
-    # Create icns file from appiconset
-    iconutil -c icns "$RESOURCES_DIR/AppIcon.appiconset" -o "$RESOURCES_DIR/AppIcon.icns" 2>/dev/null || echo "Note: iconutil not available, using PNG icons"
+    # Try to create icns file from appiconset
+    if command -v iconutil &> /dev/null; then
+        iconutil -c icns "$RESOURCES_DIR/AppIcon.appiconset" -o "$RESOURCES_DIR/AppIcon.icns"
+        echo "✓ AppIcon.icns created with iconutil"
+    else
+        # Fallback: use sips to convert largest PNG
+        sips -s format icns "$RESOURCES_DIR/AppIcon.appiconset/icon_512x512.png" --out "$RESOURCES_DIR/AppIcon.icns" 2>/dev/null
+        echo "✓ AppIcon.icns created with sips"
+    fi
 fi
 
 # Sign the app with Developer ID

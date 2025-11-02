@@ -16,25 +16,33 @@ let image = NSImage(size: NSSize(width: size, height: size))
 
 image.lockFocus()
 
-// Background gradient
+// Black background with subtle gradient for depth
 let gradient = NSGradient(colors: [
-    NSColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 1.0),
-    NSColor(red: 0.1, green: 0.3, blue: 0.6, alpha: 1.0)
+    NSColor(white: 0.15, alpha: 1.0),
+    NSColor(white: 0.08, alpha: 1.0)
 ])
 gradient?.draw(in: NSRect(x: 0, y: 0, width: size, height: size), angle: 135)
 
-// Add rounded corners
+// Add smooth rounded corners (macOS Big Sur style)
+let cornerRadius = size * 0.225
 let path = NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: size, height: size),
-                        xRadius: size * 0.225, yRadius: size * 0.225)
+                        xRadius: cornerRadius, yRadius: cornerRadius)
 path.addClip()
 
 // Draw chart/monitoring icon
-let iconSize = size * 0.6
+let iconSize = size * 0.55
 let iconX = (size - iconSize) / 2
-let iconY = (size - iconSize) / 2
+let iconY = (size - iconSize) / 2 + size * 0.02
 
-// Draw bars representing activity monitoring
+// Draw bars representing activity monitoring with subtle glow
 NSColor.white.setFill()
+
+// Add subtle shadow for depth
+let shadow = NSShadow()
+shadow.shadowColor = NSColor(white: 1.0, alpha: 0.3)
+shadow.shadowBlurRadius = size * 0.015
+shadow.shadowOffset = NSSize(width: 0, height: size * 0.005)
+shadow.set()
 
 let barWidth = iconSize / 6
 let spacing = iconSize / 12
