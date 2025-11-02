@@ -43,6 +43,14 @@ elif [ -d "Resources/AppIcon.appiconset" ]; then
     fi
 fi
 
+# Copy menu bar icons
+echo "Copying menu bar icons..."
+if [ -d "menubar_icons" ]; then
+    mkdir -p "$RESOURCES_DIR/menubar_icons"
+    cp -r menubar_icons/* "$RESOURCES_DIR/menubar_icons/"
+    echo "✓ Menu bar icons copied"
+fi
+
 # Sign the app with Developer ID
 echo "Signing app with Developer ID..."
 codesign --force --sign "Developer ID Application: Ahmed Zitoun (3FPQAZ9VK8)" \
