@@ -6,14 +6,25 @@ struct MonitorView: View {
     @StateObject private var privacyManager = PrivacyManager()
     @State private var isReorderMode: Bool = false
     @State private var draggedItem: MetricSection?
+    @State private var showSystemInfo = false
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Desktopie")
+                Text("PeakView")
                     .font(.system(size: 18, weight: .bold))
                 Spacer()
+
+                Button(action: {
+                    showSystemInfo.toggle()
+                }) {
+                    Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
+                        .font(.system(size: 16))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .help("System Information")
 
                 Button(action: {
                     configManager.config.viewMode = .simple
@@ -66,10 +77,41 @@ struct MonitorView: View {
                         .foregroundColor(.red)
                 }
                 .buttonStyle(.plain)
-                .help("Quit Desktopie")
+                .help("Quit PeakView")
             }
             .padding()
             .background(Color.accentColor.opacity(0.1))
+
+            // System Information Panel
+            if showSystemInfo {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "desktopcomputer")
+                            .foregroundColor(.blue)
+                        Text("System Information")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+
+                    Divider()
+
+                    InfoRow(label: "Model", value: systemMonitor.deviceModel)
+                    InfoRow(label: "macOS", value: systemMonitor.macOSVersion)
+                    InfoRow(label: "Processor", value: systemMonitor.cpuModel)
+                    InfoRow(label: "Cores", value: "\(systemMonitor.cpuCores) cores")
+                    InfoRow(label: "Memory", value: String(format: "%.0f GB", systemMonitor.totalMemoryGB))
+                    InfoRow(label: "Storage", value: String(format: "%.0f GB", systemMonitor.totalStorageGB))
+                    InfoRow(label: "Display", value: systemMonitor.displayResolution)
+                    InfoRow(label: "Uptime", value: systemMonitor.uptimeString)
+                }
+                .padding(12)
+                .background(Color.blue.opacity(0.05))
+                .overlay(
+                    Rectangle()
+                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                )
+                .padding(.horizontal)
+                .padding(.top, 8)
+            }
 
             ScrollView {
                 VStack(spacing: 20) {
@@ -96,7 +138,8 @@ struct MonitorView: View {
                 .padding()
             }
         }
-        .frame(width: 360, height: 480)
+        .frame(width: 360)
+        .frame(minHeight: 480, maxHeight: 800)
     }
 
     @ViewBuilder

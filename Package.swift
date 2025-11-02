@@ -2,20 +2,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "Desktopie",
+    name: "PeakView",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "Desktopie",
-            targets: ["Desktopie"]
+            name: "PeakView",
+            targets: ["PeakView"]
         )
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "Desktopie",
+            name: "PeakView",
             dependencies: [],
             path: "Sources"
         )

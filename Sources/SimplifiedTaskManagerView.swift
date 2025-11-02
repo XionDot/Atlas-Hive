@@ -112,7 +112,7 @@ struct SimplifiedTaskManagerView: View {
             .padding()
             .background(Color.gray.opacity(0.05))
         }
-        .frame(width: 500, height: 600)
+        .frame(width: 420, height: 600)
         .onAppear {
             taskManager.refreshProcesses()
         }
@@ -120,18 +120,32 @@ struct SimplifiedTaskManagerView: View {
 
     private var filteredApps: [ProcessData] {
         let apps = taskManager.processes.filter { process in
-            // Filter to only show apps (end with .app or common user apps)
-            let isApp = process.path.hasSuffix(".app") ||
-                       process.path.contains("/Applications/") ||
-                       process.path.contains("/Users/")
+            // Only show apps from /Applications/ or system apps
+            let isUserApp = process.path.hasPrefix("/Applications/") && process.path.contains(".app/")
+            let isSystemApp = (process.path.contains("/System/Applications/") ||
+                              process.path.contains("/System/Volumes/Preboot/Cryptexes/App/System/Applications/")) &&
+                              process.path.contains(".app/")
 
-            // Exclude system processes
-            let isSystemProcess = process.path.hasPrefix("/usr/libexec/") ||
-                                 process.path.hasPrefix("/System/") ||
-                                 process.path.hasPrefix("/usr/sbin/") ||
-                                 process.path.contains("kernel_task")
+            guard isUserApp || isSystemApp else {
+                return false
+            }
 
-            return isApp && !isSystemProcess
+            // Exclude helper processes, plugins, and renderers
+            let name = process.name.lowercased()
+            let excludedPatterns = ["helper", "plugin", "renderer", "gpu", "agent", "daemon", "service", "broker", "webcontent", "networking"]
+
+            for pattern in excludedPatterns {
+                if name.contains(pattern) {
+                    return false
+                }
+            }
+
+            // Exclude XPC services, app extensions and widgets
+            if process.path.contains(".xpc/") || process.path.contains(".appex/") || process.path.contains(".widget/") {
+                return false
+            }
+
+            return true
         }
 
         if searchText.isEmpty {

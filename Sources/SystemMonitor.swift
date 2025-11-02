@@ -1,6 +1,7 @@
 import Foundation
 import IOKit.ps
 import SystemConfiguration
+import AppKit
 
 class SystemMonitor: ObservableObject {
     @Published var cpuUsage: Double = 0.0
@@ -14,6 +15,16 @@ class SystemMonitor: ObservableObject {
     @Published var batteryHealth: Int = 100  // Battery health percentage
     @Published var diskUsage: Double = 0.0
 
+    // System information
+    @Published var deviceModel: String = ""
+    @Published var macOSVersion: String = ""
+    @Published var cpuModel: String = ""
+    @Published var cpuCores: Int = 0
+    @Published var uptimeString: String = ""
+    @Published var totalMemoryGB: Double = 0.0
+    @Published var totalStorageGB: Double = 0.0
+    @Published var displayResolution: String = ""
+
     private var previousCPUInfo: host_cpu_load_info?
     private var previousNetworkBytes: (rx: UInt64, tx: UInt64) = (0, 0)
     private var lastUpdateTime: Date = Date()
@@ -21,6 +32,7 @@ class SystemMonitor: ObservableObject {
     private var timer: Timer?
 
     init() {
+        loadSystemInfo()
         startMonitoring()
     }
 
@@ -31,6 +43,123 @@ class SystemMonitor: ObservableObject {
         // Setup timer
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateMetrics()
+        }
+    }
+
+    func loadSystemInfo() {
+        // Get friendly device model name
+        deviceModel = getDeviceModel()
+
+        // Get macOS version
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        macOSVersion = "macOS \(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+
+        // Get CPU model
+        var size = 0
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        var cpuBrand = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &cpuBrand, &size, nil, 0)
+        cpuModel = String(cString: cpuBrand).trimmingCharacters(in: .whitespaces)
+
+        // Get CPU cores
+        var cores: Int32 = 0
+        size = MemoryLayout<Int32>.size
+        sysctlbyname("hw.ncpu", &cores, &size, nil, 0)
+        cpuCores = Int(cores)
+
+        // Get total memory in GB
+        var memSize: UInt64 = 0
+        size = MemoryLayout<UInt64>.size
+        sysctlbyname("hw.memsize", &memSize, &size, nil, 0)
+        totalMemoryGB = Double(memSize) / 1_073_741_824.0  // Convert bytes to GB
+
+        // Get total storage
+        totalStorageGB = getTotalStorage()
+
+        // Get display resolution
+        displayResolution = getDisplayResolution()
+
+        // Update uptime periodically
+        updateUptime()
+    }
+
+    func getDeviceModel() -> String {
+        var size = 0
+        sysctlbyname("hw.model", nil, &size, nil, 0)
+        var model = [CChar](repeating: 0, count: size)
+        sysctlbyname("hw.model", &model, &size, nil, 0)
+        let modelIdentifier = String(cString: model)
+
+        // Try to get marketing name from system_profiler
+        let task = Process()
+        task.launchPath = "/usr/sbin/system_profiler"
+        task.arguments = ["SPHardwareDataType"]
+
+        let pipe = Pipe()
+        task.standardOutput = pipe
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                // Parse for "Model Name:" or "Model Identifier:"
+                let lines = output.components(separatedBy: .newlines)
+                for line in lines {
+                    if line.contains("Model Name:") {
+                        let parts = line.components(separatedBy: ":")
+                        if parts.count > 1 {
+                            return parts[1].trimmingCharacters(in: .whitespaces)
+                        }
+                    }
+                }
+            }
+        } catch {
+            // Fall back to model identifier
+        }
+
+        return modelIdentifier
+    }
+
+    func getTotalStorage() -> Double {
+        do {
+            let fileURL = URL(fileURLWithPath: "/")
+            let values = try fileURL.resourceValues(forKeys: [.volumeTotalCapacityKey])
+            if let capacity = values.volumeTotalCapacity {
+                return Double(capacity) / 1_073_741_824.0  // Convert bytes to GB
+            }
+        } catch {
+            return 0.0
+        }
+        return 0.0
+    }
+
+    func getDisplayResolution() -> String {
+        guard let screen = NSScreen.main else {
+            return "Unknown"
+        }
+
+        let screenSize = screen.frame.size
+        let scaleFactor = screen.backingScaleFactor
+        let backingWidth = screenSize.width * scaleFactor
+        let backingHeight = screenSize.height * scaleFactor
+
+        return "\(Int(backingWidth)) × \(Int(backingHeight))"
+    }
+
+    func updateUptime() {
+        let uptime = ProcessInfo.processInfo.systemUptime
+        let days = Int(uptime) / 86400
+        let hours = (Int(uptime) % 86400) / 3600
+        let minutes = (Int(uptime) % 3600) / 60
+
+        if days > 0 {
+            uptimeString = "\(days)d \(hours)h \(minutes)m"
+        } else if hours > 0 {
+            uptimeString = "\(hours)h \(minutes)m"
+        } else {
+            uptimeString = "\(minutes)m"
         }
     }
 
@@ -55,6 +184,7 @@ class SystemMonitor: ObservableObject {
                 self.isCharging = battery.charging
                 self.batteryHealth = battery.health
                 self.diskUsage = disk
+                self.updateUptime()
             }
         }
     }

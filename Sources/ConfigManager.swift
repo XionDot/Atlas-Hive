@@ -46,7 +46,7 @@ class ConfigManager: ObservableObject {
     init() {
         // Get config file path
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let appFolder = appSupport.appendingPathComponent("Desktopie", isDirectory: true)
+        let appFolder = appSupport.appendingPathComponent("PeakView", isDirectory: true)
 
         // Create directory if it doesn't exist
         try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)

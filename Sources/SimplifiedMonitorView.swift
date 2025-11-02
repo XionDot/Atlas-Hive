@@ -3,6 +3,7 @@ import SwiftUI
 struct SimplifiedMonitorView: View {
     @ObservedObject var monitor: SystemMonitor
     @ObservedObject var configManager: ConfigManager
+    @State private var showSystemInfo = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -12,6 +13,16 @@ struct SimplifiedMonitorView: View {
                     .font(.system(size: 18, weight: .semibold))
 
                 Spacer()
+
+                Button(action: {
+                    showSystemInfo.toggle()
+                }) {
+                    Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .help("System Information")
 
                 Button(action: {
                     configManager.config.viewMode = .advanced
@@ -33,9 +44,41 @@ struct SimplifiedMonitorView: View {
                         .foregroundColor(.red)
                 }
                 .buttonStyle(.plain)
-                .help("Quit Desktopie")
+                .help("Quit PeakView")
             }
             .padding(.bottom, 8)
+
+            // System Information Panel
+            if showSystemInfo {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "desktopcomputer")
+                            .foregroundColor(.blue)
+                        Text("System Information")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+
+                    Divider()
+
+                    InfoRow(label: "Model", value: monitor.deviceModel)
+                    InfoRow(label: "macOS", value: monitor.macOSVersion)
+                    InfoRow(label: "Processor", value: monitor.cpuModel)
+                    InfoRow(label: "Cores", value: "\(monitor.cpuCores) cores")
+                    InfoRow(label: "Memory", value: String(format: "%.0f GB", monitor.totalMemoryGB))
+                    InfoRow(label: "Storage", value: String(format: "%.0f GB", monitor.totalStorageGB))
+                    InfoRow(label: "Display", value: monitor.displayResolution)
+                    InfoRow(label: "Uptime", value: monitor.uptimeString)
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                )
+            }
 
             // Simple status cards
             VStack(spacing: 12) {
@@ -255,5 +298,24 @@ struct StatusCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.gray.opacity(0.1))
         )
+    }
+}
+
+struct InfoRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.primary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
     }
 }

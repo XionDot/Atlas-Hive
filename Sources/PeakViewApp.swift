@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct DesktopieApp: App {
+struct PeakViewApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Create popover
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 360, height: 480)
+        popover.contentSize = NSSize(width: 360, height: 600)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: ContentView(
@@ -110,7 +110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "Quit Desktopie", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit PeakView", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
