@@ -163,16 +163,25 @@ struct AppRowView: View {
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var appIcon: NSImage?
 
     var body: some View {
         HStack(spacing: 12) {
-            // App icon (placeholder - could be enhanced with real icons)
-            Image(systemName: appIcon())
-                .font(.system(size: 28))
-                .foregroundColor(.blue)
-                .frame(width: 40, height: 40)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
+            // App icon
+            if let icon = appIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 40, height: 40)
+                    .cornerRadius(8)
+            } else {
+                Image(systemName: fallbackIcon())
+                    .font(.system(size: 28))
+                    .foregroundColor(.blue)
+                    .frame(width: 40, height: 40)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+            }
 
             // App name and stats
             VStack(alignment: .leading, spacing: 4) {
@@ -214,9 +223,22 @@ struct AppRowView: View {
         } message: {
             Text(alertMessage)
         }
+        .onAppear {
+            loadAppIcon()
+        }
     }
 
-    private func appIcon() -> String {
+    private func loadAppIcon() {
+        // Get the app bundle path from the process path
+        if let range = app.path.range(of: ".app/") {
+            let bundlePath = String(app.path[..<range.upperBound].dropLast(1))
+            appIcon = NSWorkspace.shared.icon(forFile: bundlePath)
+        } else if app.path.hasSuffix(".app") {
+            appIcon = NSWorkspace.shared.icon(forFile: app.path)
+        }
+    }
+
+    private func fallbackIcon() -> String {
         let name = app.name.lowercased()
 
         if name.contains("safari") { return "safari" }

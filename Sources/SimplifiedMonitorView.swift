@@ -6,16 +6,21 @@ struct SimplifiedMonitorView: View {
     @State private var showSystemInfo = false
 
     var body: some View {
-        VStack(spacing: 16) {
-            // Header with mode toggle
-            HStack {
+        VStack(spacing: 0) {
+            // Scrollable content
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Header with mode toggle
+                    HStack {
                 Text("System Monitor")
                     .font(.system(size: 18, weight: .semibold))
 
                 Spacer()
 
                 Button(action: {
-                    showSystemInfo.toggle()
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showSystemInfo.toggle()
+                    }
                 }) {
                     Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
                         .font(.system(size: 14))
@@ -78,6 +83,7 @@ struct SimplifiedMonitorView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.blue.opacity(0.2), lineWidth: 1)
                 )
+                .transition(.opacity.combined(with: .scale))
             }
 
             // Simple status cards
@@ -129,10 +135,11 @@ struct SimplifiedMonitorView: View {
                     )
                 }
             }
+                }
+                .padding(16)
+            }
 
-            Spacer(minLength: 12)
-
-            // Quick action buttons
+            // Quick action buttons - fixed at bottom
             HStack(spacing: 12) {
                 Button(action: {
                     configManager.showTaskManager = true
@@ -164,8 +171,9 @@ struct SimplifiedMonitorView: View {
                 }
                 .buttonStyle(.plain)
             }
+            .padding(16)
+            .background(Color(NSColor.windowBackgroundColor))
         }
-        .padding(16)
         .frame(width: 340)
     }
 

@@ -221,8 +221,23 @@ struct ProcessRow: View {
     let onKill: () -> Void
     let onRestart: () -> Void
 
+    @State private var appIcon: NSImage?
+
     var body: some View {
         HStack(spacing: 12) {
+            // App icon
+            if let icon = appIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 24, height: 24)
+            } else {
+                Image(systemName: "app")
+                    .font(.system(size: 16))
+                    .foregroundColor(.gray)
+                    .frame(width: 24, height: 24)
+            }
+
             // Process name
             VStack(alignment: .leading, spacing: 2) {
                 Text(process.name)
@@ -233,7 +248,7 @@ struct ProcessRow: View {
                     .font(.system(size: 10))
                     .foregroundColor(.gray)
             }
-            .frame(width: 180, alignment: .leading)
+            .frame(width: 150, alignment: .leading)
 
             Spacer()
 
@@ -284,6 +299,19 @@ struct ProcessRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+        .onAppear {
+            loadAppIcon()
+        }
+    }
+
+    private func loadAppIcon() {
+        // Get the app bundle path from the process path
+        if let range = process.path.range(of: ".app/") {
+            let bundlePath = String(process.path[..<range.upperBound].dropLast(1))
+            appIcon = NSWorkspace.shared.icon(forFile: bundlePath)
+        } else if process.path.hasSuffix(".app") {
+            appIcon = NSWorkspace.shared.icon(forFile: process.path)
+        }
     }
 
     private func cpuColor(for usage: Double) -> Color {

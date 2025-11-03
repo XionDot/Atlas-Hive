@@ -25,6 +25,47 @@ class SystemMonitor: ObservableObject {
     @Published var totalStorageGB: Double = 0.0
     @Published var displayResolution: String = ""
 
+    // Detailed CPU metrics
+    @Published var cpuLoadAverage: String = ""
+    @Published var cpuTemperature: String = "N/A"
+    @Published var fanSpeed: String = "N/A"
+    @Published var gpuInfo: String = "N/A"
+
+    // Detailed Memory metrics
+    @Published var memoryFree: Double = 0.0
+    @Published var memoryCached: Double = 0.0  // Cached Files (external pages)
+    @Published var memoryWired: Double = 0.0
+    @Published var memoryCompressed: Double = 0.0
+    @Published var memoryPressure: String = "Normal"
+    @Published var swapUsed: Double = 0.0
+    @Published var swapTotal: Double = 0.0
+    @Published var pagesIn: UInt64 = 0
+    @Published var pagesOut: UInt64 = 0
+
+    // Detailed Disk metrics
+    @Published var diskReadSpeed: Double = 0.0
+    @Published var diskWriteSpeed: Double = 0.0
+    @Published var diskFree: Double = 0.0
+    @Published var mountedDisks: [String] = []
+    @Published var diskTemperature: String = "N/A"
+    @Published var smartStatus: String = "N/A"
+
+    // Detailed Battery metrics
+    @Published var batteryTimeRemaining: String = ""
+    @Published var batteryWattage: String = ""
+    @Published var batteryTemperature: String = "N/A"
+    @Published var batteryCapacity: String = ""
+    @Published var batteryCycles: Int = 0
+
+    // Detailed Network metrics
+    @Published var networkConnected: Bool = false
+    @Published var publicIP: String = "Loading..."
+    @Published var localIP: String = ""
+    @Published var macAddress: String = ""
+    @Published var linkSpeed: String = ""
+    @Published var peakDownload: Double = 0.0
+    @Published var peakUpload: Double = 0.0
+
     private var previousCPUInfo: host_cpu_load_info?
     private var previousNetworkBytes: (rx: UInt64, tx: UInt64) = (0, 0)
     private var lastUpdateTime: Date = Date()
@@ -173,7 +214,14 @@ class SystemMonitor: ObservableObject {
             let battery = self.getBatteryInfo()
             let disk = self.getDiskUsage()
 
+            // Get detailed metrics
+            let detailedMemory = self.getDetailedMemoryMetrics()
+            let detailedDisk = self.getDetailedDiskMetrics()
+            let detailedBattery = self.getDetailedBatteryMetrics()
+            let detailedNetwork = self.getDetailedNetworkMetrics()
+
             DispatchQueue.main.async {
+                // Basic metrics
                 self.cpuUsage = cpu
                 self.memoryUsage = memory.usage
                 self.memoryUsed = memory.used
@@ -184,6 +232,47 @@ class SystemMonitor: ObservableObject {
                 self.isCharging = battery.charging
                 self.batteryHealth = battery.health
                 self.diskUsage = disk
+
+                // Detailed CPU metrics
+                self.getDetailedCPUMetrics()
+
+                // Detailed Memory metrics
+                self.memoryFree = detailedMemory.free
+                self.memoryCached = detailedMemory.cached
+                self.memoryWired = detailedMemory.wired
+                self.memoryCompressed = detailedMemory.compressed
+                self.memoryPressure = detailedMemory.pressure
+                self.swapUsed = detailedMemory.swapUsed
+                self.swapTotal = detailedMemory.swapTotal
+                self.pagesIn = detailedMemory.pagesIn
+                self.pagesOut = detailedMemory.pagesOut
+
+                // Detailed Disk metrics
+                self.diskReadSpeed = detailedDisk.readSpeed
+                self.diskWriteSpeed = detailedDisk.writeSpeed
+                self.diskFree = detailedDisk.free
+                self.mountedDisks = detailedDisk.mounted
+
+                // Detailed Battery metrics
+                self.batteryTimeRemaining = detailedBattery.timeRemaining
+                self.batteryWattage = detailedBattery.wattage
+                self.batteryCapacity = detailedBattery.capacity
+                self.batteryCycles = detailedBattery.cycles
+
+                // Detailed Network metrics
+                self.networkConnected = detailedNetwork.connected
+                self.localIP = detailedNetwork.localIP
+                self.macAddress = detailedNetwork.macAddress
+                self.linkSpeed = detailedNetwork.linkSpeed
+
+                // Track peak speeds
+                if network.download > self.peakDownload {
+                    self.peakDownload = network.download
+                }
+                if network.upload > self.peakUpload {
+                    self.peakUpload = network.upload
+                }
+
                 self.updateUptime()
             }
         }
@@ -254,12 +343,23 @@ class SystemMonitor: ObservableObject {
         let pageSize = Double(vm_kernel_page_size)
         let totalMemory = Double(ProcessInfo.processInfo.physicalMemory)
 
-        let active = Double(stats.active_count) * pageSize
-        let inactive = Double(stats.inactive_count) * pageSize
+        // Get internal vs external page counts (Activity Monitor uses this)
+        var internalPages: UInt64 = 0
+        var externalPages: UInt64 = 0
+        var size = MemoryLayout<UInt64>.size
+
+        sysctlbyname("vm.page_pageable_internal_count", &internalPages, &size, nil, 0)
+        sysctlbyname("vm.page_pageable_external_count", &externalPages, &size, nil, 0)
+
         let wired = Double(stats.wire_count) * pageSize
         let compressed = Double(stats.compressor_page_count) * pageSize
 
-        let usedMemory = active + inactive + wired + compressed
+        // Activity Monitor's "App Memory" is internal pages (anonymous memory used by apps)
+        // This excludes file-backed memory (external pages) which can be purged
+        let appMemory = Double(internalPages) * pageSize
+
+        // Memory Used = App Memory + Wired + Compressed (matching Activity Monitor)
+        let usedMemory = appMemory + wired + compressed
         let usagePercentage = (usedMemory / totalMemory) * 100.0
 
         return (usagePercentage, usedMemory, totalMemory)
@@ -390,6 +490,233 @@ class SystemMonitor: ObservableObject {
         }
 
         return 0.0
+    }
+
+    // MARK: - Detailed Metrics Collection
+
+    func getDetailedCPUMetrics() {
+        // CPU Load Average
+        var loadAvg = [Double](repeating: 0, count: 3)
+        getloadavg(&loadAvg, 3)
+        cpuLoadAverage = String(format: "%.2f, %.2f, %.2f", loadAvg[0], loadAvg[1], loadAvg[2])
+
+        // GPU Info - get from system_profiler
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let task = Process()
+            task.launchPath = "/usr/sbin/system_profiler"
+            task.arguments = ["SPDisplaysDataType", "-detailLevel", "mini"]
+
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.launch()
+            task.waitUntilExit()
+
+            if let data = try? pipe.fileHandleForReading.readToEnd(),
+               let output = String(data: data, encoding: .utf8) {
+                let lines = output.components(separatedBy: "\n")
+                for line in lines {
+                    if line.contains("Chipset Model:") {
+                        let gpu = line.replacingOccurrences(of: "Chipset Model:", with: "").trimmingCharacters(in: .whitespaces)
+                        DispatchQueue.main.async {
+                            self?.gpuInfo = gpu
+                        }
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    func getDetailedMemoryMetrics() -> (free: Double, cached: Double, wired: Double, compressed: Double, pressure: String, swapUsed: Double, swapTotal: Double, pagesIn: UInt64, pagesOut: UInt64) {
+        var vmStats = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
+
+        let result = withUnsafeMutablePointer(to: &vmStats) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+            }
+        }
+
+        if result == KERN_SUCCESS {
+            let pageSize = Double(vm_kernel_page_size)
+            let free = Double(vmStats.free_count) * pageSize
+            let wired = Double(vmStats.wire_count) * pageSize
+            let compressed = Double(vmStats.compressor_page_count) * pageSize
+            let pagesIn = vmStats.pageins
+            let pagesOut = vmStats.pageouts
+
+            // Get cached files (external pages - file-backed memory)
+            var externalPages: UInt64 = 0
+            var size = MemoryLayout<UInt64>.size
+            sysctlbyname("vm.page_pageable_external_count", &externalPages, &size, nil, 0)
+            let cached = Double(externalPages) * pageSize
+
+            // Calculate memory pressure
+            let active = Double(vmStats.active_count) * pageSize
+            let inactive = Double(vmStats.inactive_count) * pageSize
+            let totalUsed = active + inactive + wired
+            let pressurePercent = (totalUsed / memoryTotal) * 100
+
+            var pressure = "Normal"
+            if pressurePercent > 90 {
+                pressure = "Critical"
+            } else if pressurePercent > 75 {
+                pressure = "High"
+            } else if pressurePercent > 60 {
+                pressure = "Medium"
+            }
+
+            // Get swap info
+            var swapUsage: xsw_usage = xsw_usage()
+            size = MemoryLayout<xsw_usage>.size
+            let swapResult = sysctlbyname("vm.swapusage", &swapUsage, &size, nil, 0)
+
+            let swapUsed = swapResult == 0 ? Double(swapUsage.xsu_used) : 0.0
+            let swapTotal = swapResult == 0 ? Double(swapUsage.xsu_total) : 0.0
+
+            return (free, cached, wired, compressed, pressure, swapUsed, swapTotal, pagesIn, pagesOut)
+        }
+
+        return (0, 0, 0, 0, "Unknown", 0, 0, 0, 0)
+    }
+
+    func getDetailedDiskMetrics() -> (readSpeed: Double, writeSpeed: Double, free: Double, mounted: [String]) {
+        var readSpeed: Double = 0
+        var writeSpeed: Double = 0
+        var freeSpace: Double = 0
+        var mounted: [String] = []
+
+        // Get mounted volumes
+        if let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: [.volumeNameKey], options: []) {
+            for url in urls {
+                if let volumeName = try? url.resourceValues(forKeys: [.volumeNameKey]).volumeName {
+                    mounted.append(volumeName)
+                }
+            }
+        }
+
+        // Get disk free space
+        if let attributes = try? FileManager.default.attributesOfFileSystem(forPath: "/"),
+           let freeSize = attributes[.systemFreeSize] as? NSNumber {
+            freeSpace = freeSize.doubleValue
+        }
+
+        return (readSpeed, writeSpeed, freeSpace, mounted)
+    }
+
+    func getDetailedBatteryMetrics() -> (timeRemaining: String, wattage: String, capacity: String, cycles: Int) {
+        guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [Any],
+              let source = sources.first,
+              let description = IOPSGetPowerSourceDescription(snapshot, source as CFTypeRef)?.takeUnretainedValue() as? [String: Any] else {
+            return ("N/A", "N/A", "N/A", 0)
+        }
+
+        // Time remaining
+        var timeRemaining = "N/A"
+        if let timeToEmpty = description[kIOPSTimeToEmptyKey] as? Int, timeToEmpty > 0 {
+            let hours = timeToEmpty / 60
+            let minutes = timeToEmpty % 60
+            timeRemaining = "\(hours)h \(minutes)m"
+        } else if isCharging {
+            if let timeToFull = description[kIOPSTimeToFullChargeKey] as? Int, timeToFull > 0 {
+                let hours = timeToFull / 60
+                let minutes = timeToFull % 60
+                timeRemaining = "\(hours)h \(minutes)m until full"
+            } else {
+                timeRemaining = "Calculating..."
+            }
+        } else {
+            timeRemaining = "Unknown"
+        }
+
+        // Wattage (current * voltage / 1000)
+        var wattage = "N/A"
+        if let voltage = description["Voltage"] as? Double,
+           let amperage = description["Amperage"] as? Double {
+            let watts = (voltage * amperage) / 1000000.0
+            wattage = String(format: "%.2f W", watts)
+        }
+
+        // Capacity
+        var capacity = "N/A"
+        if let maxCapacity = description["MaxCapacity"] as? Int,
+           let designCapacity = description["DesignCapacity"] as? Int {
+            capacity = "\(maxCapacity) / \(designCapacity) mAh"
+        }
+
+        // Cycle count - get from IORegistry
+        var cycles = 0
+        let matching = IOServiceMatching("AppleSmartBattery")
+        var iterator: io_iterator_t = 0
+
+        if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == kIOReturnSuccess {
+            let service = IOIteratorNext(iterator)
+            if service != 0 {
+                if let cycleCount = IORegistryEntryCreateCFProperty(service, "CycleCount" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? Int {
+                    cycles = cycleCount
+                }
+                IOObjectRelease(service)
+            }
+            IOObjectRelease(iterator)
+        }
+
+        return (timeRemaining, wattage, capacity, cycles)
+    }
+
+    func getDetailedNetworkMetrics() -> (connected: Bool, localIP: String, macAddress: String, linkSpeed: String) {
+        var connected = false
+        var localIP = ""
+        var macAddress = ""
+        var linkSpeed = ""
+
+        // Get network interfaces
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
+            return (false, "", "", "")
+        }
+
+        defer { freeifaddrs(ifaddr) }
+
+        for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+            let interface = ptr.pointee
+            let addrFamily = interface.ifa_addr.pointee.sa_family
+
+            if addrFamily == UInt8(AF_INET) {
+                let name = String(cString: interface.ifa_name)
+
+                // Skip loopback
+                if name == "lo0" { continue }
+
+                // Get IP address
+                var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                           &hostname, socklen_t(hostname.count),
+                           nil, socklen_t(0), NI_NUMERICHOST)
+
+                let address = String(cString: hostname)
+                if !address.isEmpty && (name.starts(with: "en") || name.starts(with: "pdp_ip")) {
+                    localIP = address
+                    connected = true
+                }
+            }
+        }
+
+        // Get public IP asynchronously
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            if let url = URL(string: "https://api.ipify.org"),
+               let ip = try? String(contentsOf: url, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    self?.publicIP = ip
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self?.publicIP = "Unavailable"
+                }
+            }
+        }
+
+        return (connected, localIP, macAddress, linkSpeed)
     }
 
     deinit {

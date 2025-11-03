@@ -146,43 +146,16 @@ struct MonitorView: View {
     func metricSectionView(for section: MetricSection) -> some View {
         switch section {
         case .cpu:
-            MetricCard(
-                title: "CPU",
-                icon: "cpu",
-                value: systemMonitor.cpuUsage,
-                color: .blue,
-                showGraph: configManager.config.showGraphs
-            )
+            DetailedCPUCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
         case .memory:
-            MetricCard(
-                title: "Memory",
-                icon: "memorychip",
-                value: systemMonitor.memoryUsage,
-                subtitle: formatBytes(systemMonitor.memoryUsed) + " / " + formatBytes(systemMonitor.memoryTotal),
-                color: .green,
-                showGraph: configManager.config.showGraphs
-            )
+            DetailedMemoryCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
         case .network:
-            NetworkCard(
-                downloadSpeed: systemMonitor.networkDownload,
-                uploadSpeed: systemMonitor.networkUpload,
-                showGraph: configManager.config.showGraphs
-            )
+            DetailedNetworkCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
         case .disk:
-            MetricCard(
-                title: "Disk",
-                icon: "internaldrive",
-                value: systemMonitor.diskUsage,
-                color: .orange,
-                showGraph: configManager.config.showGraphs
-            )
+            DetailedDiskCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
         case .battery:
             if systemMonitor.batteryLevel >= 0 {
-                BatteryCard(
-                    level: systemMonitor.batteryLevel,
-                    isCharging: systemMonitor.isCharging,
-                    health: systemMonitor.batteryHealth
-                )
+                DetailedBatteryCard(systemMonitor: systemMonitor)
             }
         case .privacy:
             PrivacyCard(privacyManager: privacyManager)
@@ -201,6 +174,15 @@ struct MonitorView: View {
         formatter.allowedUnits = [.useKB, .useMB, .useGB]
         formatter.countStyle = .binary
         return formatter.string(fromByteCount: Int64(bytesPerSecond)) + "/s"
+    }
+
+    func colorForPercentage(_ percentage: Double) -> Color {
+        switch percentage {
+        case 0..<40: return .green
+        case 40..<70: return .yellow
+        case 70..<90: return .orange
+        default: return .red
+        }
     }
 }
 
@@ -228,8 +210,10 @@ struct MetricCard: View {
 
             if let subtitle = subtitle {
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             // Progress bar
@@ -601,5 +585,411 @@ struct DropViewDelegate: DropDelegate {
     func performDrop(info: DropInfo) -> Bool {
         self.draggedItem = nil
         return true
+    }
+}
+
+// MARK: - Detailed Cards
+
+struct DetailedCPUCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    let showGraph: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "cpu")
+                    .foregroundColor(colorForPercentage(systemMonitor.cpuUsage))
+                    .font(.system(size: 20))
+                Text("CPU")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Text(String(format: "%.1f%%", systemMonitor.cpuUsage))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(colorForPercentage(systemMonitor.cpuUsage))
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                if !systemMonitor.cpuModel.isEmpty {
+                    DetailRow(label: "Model", value: systemMonitor.cpuModel)
+                }
+                DetailRow(label: "Cores", value: "\(systemMonitor.cpuCores) cores")
+                if !systemMonitor.cpuLoadAverage.isEmpty {
+                    DetailRow(label: "Load Average", value: systemMonitor.cpuLoadAverage)
+                }
+                if systemMonitor.gpuInfo != "N/A" {
+                    DetailRow(label: "GPU", value: systemMonitor.gpuInfo)
+                }
+                if !systemMonitor.uptimeString.isEmpty {
+                    DetailRow(label: "Uptime", value: systemMonitor.uptimeString)
+                }
+            }
+            .font(.system(size: 11))
+            
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 8)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(colorForPercentage(systemMonitor.cpuUsage))
+                        .frame(width: geometry.size.width * (systemMonitor.cpuUsage / 100.0), height: 8)
+                }
+            }
+            .frame(height: 8)
+            
+            if showGraph {
+                MiniGraph(value: systemMonitor.cpuUsage, color: colorForPercentage(systemMonitor.cpuUsage))
+                    .frame(height: 60)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    func colorForPercentage(_ percentage: Double) -> Color {
+        switch percentage {
+        case 0..<40: return .green
+        case 40..<70: return .yellow
+        case 70..<90: return .orange
+        default: return .red
+        }
+    }
+}
+
+struct DetailedMemoryCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    let showGraph: Bool
+
+    private func formatNumber(_ number: UInt64) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = ","
+        return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "memorychip")
+                    .foregroundColor(colorForPercentage(systemMonitor.memoryUsage))
+                    .font(.system(size: 20))
+                Text("Memory")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Text(String(format: "%.1f%%", systemMonitor.memoryUsage))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(colorForPercentage(systemMonitor.memoryUsage))
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                DetailRow(label: "Used", value: formatBytes(systemMonitor.memoryUsed))
+                DetailRow(label: "Free", value: formatBytes(systemMonitor.memoryFree))
+                DetailRow(label: "Cached Files", value: formatBytes(systemMonitor.memoryCached))
+                DetailRow(label: "Wired", value: formatBytes(systemMonitor.memoryWired))
+                DetailRow(label: "Compressed", value: formatBytes(systemMonitor.memoryCompressed))
+                DetailRow(label: "Pressure", value: systemMonitor.memoryPressure)
+                if systemMonitor.swapTotal > 0 {
+                    DetailRow(label: "Swap", value: "\(formatBytes(systemMonitor.swapUsed)) / \(formatBytes(systemMonitor.swapTotal))")
+                } else {
+                    DetailRow(label: "Swap", value: "Not in use")
+                }
+                DetailRow(label: "Pages In", value: formatNumber(systemMonitor.pagesIn))
+                DetailRow(label: "Pages Out", value: formatNumber(systemMonitor.pagesOut))
+            }
+            .font(.system(size: 11))
+            
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 8)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(colorForPercentage(systemMonitor.memoryUsage))
+                        .frame(width: geometry.size.width * (systemMonitor.memoryUsage / 100.0), height: 8)
+                }
+            }
+            .frame(height: 8)
+            
+            if showGraph {
+                MiniGraph(value: systemMonitor.memoryUsage, color: colorForPercentage(systemMonitor.memoryUsage))
+                    .frame(height: 60)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    func colorForPercentage(_ percentage: Double) -> Color {
+        switch percentage {
+        case 0..<40: return .green
+        case 40..<70: return .yellow
+        case 70..<90: return .orange
+        default: return .red
+        }
+    }
+    
+    func formatBytes(_ bytes: Double) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useGB, .useMB]
+        formatter.countStyle = .memory
+        return formatter.string(fromByteCount: Int64(bytes))
+    }
+}
+
+struct DetailedDiskCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    let showGraph: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "internaldrive")
+                    .foregroundColor(colorForPercentage(systemMonitor.diskUsage))
+                    .font(.system(size: 20))
+                Text("Disk")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Text(String(format: "%.1f%%", systemMonitor.diskUsage))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(colorForPercentage(systemMonitor.diskUsage))
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                if systemMonitor.totalStorageGB > 0 {
+                    DetailRow(label: "Total", value: String(format: "%.0f GB", systemMonitor.totalStorageGB))
+                }
+                if systemMonitor.diskFree > 0 {
+                    DetailRow(label: "Free", value: formatBytes(systemMonitor.diskFree))
+                }
+                if !systemMonitor.mountedDisks.isEmpty {
+                    DetailRow(label: "Mounted", value: "\(systemMonitor.mountedDisks.count) disks")
+                }
+                if systemMonitor.smartStatus != "N/A" {
+                    DetailRow(label: "S.M.A.R.T", value: systemMonitor.smartStatus)
+                }
+            }
+            .font(.system(size: 11))
+            
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 8)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(colorForPercentage(systemMonitor.diskUsage))
+                        .frame(width: geometry.size.width * (systemMonitor.diskUsage / 100.0), height: 8)
+                }
+            }
+            .frame(height: 8)
+            
+            if showGraph {
+                MiniGraph(value: systemMonitor.diskUsage, color: colorForPercentage(systemMonitor.diskUsage))
+                    .frame(height: 60)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    func colorForPercentage(_ percentage: Double) -> Color {
+        switch percentage {
+        case 0..<40: return .green
+        case 40..<70: return .yellow
+        case 70..<90: return .orange
+        default: return .red
+        }
+    }
+    
+    func formatBytes(_ bytes: Double) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useGB, .useMB]
+        formatter.countStyle = .memory
+        return formatter.string(fromByteCount: Int64(bytes))
+    }
+}
+
+struct DetailedNetworkCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    let showGraph: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "network")
+                    .foregroundColor(.purple)
+                    .font(.system(size: 20))
+                Text("Network")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Image(systemName: systemMonitor.networkConnected ? "wifi" : "wifi.slash")
+                    .foregroundColor(systemMonitor.networkConnected ? .green : .gray)
+            }
+            
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 12))
+                        Text("Download")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    Text(formatSpeed(systemMonitor.networkDownload))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.blue)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 12))
+                        Text("Upload")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    Text(formatSpeed(systemMonitor.networkUpload))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.green)
+                }
+                
+                Spacer()
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                if systemMonitor.publicIP != "Loading..." && systemMonitor.publicIP != "Unavailable" {
+                    DetailRow(label: "Public IP", value: systemMonitor.publicIP)
+                }
+                if !systemMonitor.localIP.isEmpty {
+                    DetailRow(label: "Local IP", value: systemMonitor.localIP)
+                }
+                if systemMonitor.peakDownload > 0 {
+                    DetailRow(label: "Peak Down", value: formatSpeed(systemMonitor.peakDownload))
+                }
+                if systemMonitor.peakUpload > 0 {
+                    DetailRow(label: "Peak Up", value: formatSpeed(systemMonitor.peakUpload))
+                }
+            }
+            .font(.system(size: 11))
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    func formatSpeed(_ bytesPerSecond: Double) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .binary
+        return formatter.string(fromByteCount: Int64(bytesPerSecond)) + "/s"
+    }
+}
+
+struct DetailedBatteryCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    
+    var batteryColor: Color {
+        if systemMonitor.isCharging { return .green }
+        if systemMonitor.batteryLevel > 50 { return .green }
+        if systemMonitor.batteryLevel > 20 { return .orange }
+        return .red
+    }
+    
+    var healthColor: Color {
+        if systemMonitor.batteryHealth >= 80 { return .green }
+        if systemMonitor.batteryHealth >= 60 { return .yellow }
+        return .orange
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: systemMonitor.isCharging ? "bolt.battery.fill" : "battery.100")
+                    .foregroundColor(batteryColor)
+                    .font(.system(size: 20))
+                Text("Battery")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Text("\(systemMonitor.batteryLevel)%")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(batteryColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                DetailRow(label: "Status", value: systemMonitor.isCharging ? "Charging" : "Discharging")
+                if systemMonitor.batteryTimeRemaining != "N/A" && systemMonitor.batteryTimeRemaining != "Unknown" {
+                    DetailRow(label: "Time Remaining", value: systemMonitor.batteryTimeRemaining)
+                }
+                DetailRow(label: "Health", value: "\(systemMonitor.batteryHealth)%")
+                if systemMonitor.batteryCycles > 0 {
+                    DetailRow(label: "Cycles", value: "\(systemMonitor.batteryCycles)")
+                }
+                if systemMonitor.batteryCapacity != "N/A" {
+                    DetailRow(label: "Capacity", value: systemMonitor.batteryCapacity)
+                }
+                if systemMonitor.batteryWattage != "N/A" {
+                    DetailRow(label: "Wattage", value: systemMonitor.batteryWattage)
+                }
+            }
+            .font(.system(size: 11))
+            
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 8)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(batteryColor)
+                        .frame(width: geometry.size.width * (Double(systemMonitor.batteryLevel) / 100.0), height: 8)
+                }
+            }
+            .frame(height: 8)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
+    }
+}
+
+struct DetailRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(value)
+                .foregroundColor(.primary)
+        }
     }
 }
