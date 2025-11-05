@@ -1,25 +1,12 @@
 import SwiftUI
+import ServiceManagement
 
 struct SettingsView: View {
     @ObservedObject var configManager: ConfigManager
-    @Environment(\.dismiss) var dismiss
+    @ObservedObject var alertManager: AlertManager
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text("Settings")
-                    .font(.system(size: 20, weight: .bold))
-                Spacer()
-                Button("Done") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .padding()
-
-            Divider()
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     // View Mode Section
@@ -89,11 +76,14 @@ struct SettingsView: View {
                                 Text("Theme")
                                     .font(.system(size: 12))
                                 Picker("Theme", selection: $configManager.config.theme) {
-                                    Text("System").tag("system")
-                                    Text("Light").tag("light")
-                                    Text("Dark").tag("dark")
+                                    Text("🔄 System Default").tag("system")
+                                    Text("☀️ Light").tag("light")
+                                    Text("🌙 Dark").tag("dark")
                                 }
-                                .pickerStyle(.segmented)
+                                .pickerStyle(.menu)
+                                .onChange(of: configManager.config.theme) { _ in
+                                    configManager.applyTheme()
+                                }
                             }
                         }
                     } else {
@@ -102,11 +92,101 @@ struct SettingsView: View {
                                 Text("Theme")
                                     .font(.system(size: 12))
                                 Picker("Theme", selection: $configManager.config.theme) {
-                                    Text("System").tag("system")
-                                    Text("Light").tag("light")
-                                    Text("Dark").tag("dark")
+                                    Text("🔄 System Default").tag("system")
+                                    Text("☀️ Light").tag("light")
+                                    Text("🌙 Dark").tag("dark")
                                 }
-                                .pickerStyle(.segmented)
+                                .pickerStyle(.menu)
+                                .onChange(of: configManager.config.theme) { _ in
+                                    configManager.applyTheme()
+                                }
+                            }
+                        }
+                    }
+
+                    // Window Behavior Section
+                    SettingsSection(title: "Window Behavior", icon: "macwindow") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Show window on launch", isOn: $configManager.config.showWindowOnLaunch)
+                            Toggle("Keep menu bar when window closed", isOn: $configManager.config.keepMenuBarWhenWindowClosed)
+
+                            Text("When disabled, closing the window will quit the app")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Startup Section
+                    SettingsSection(title: "Startup", icon: "power") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Launch at startup", isOn: Binding(
+                                get: { configManager.config.launchAtStartup },
+                                set: { newValue in
+                                    configManager.config.launchAtStartup = newValue
+                                    toggleLaunchAtStartup(enabled: newValue)
+                                }
+                            ))
+
+                            Text("PeakView will automatically start when you log in")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Resource Alerts Section
+                    SettingsSection(title: "Resource Alerts", icon: "bell.badge") {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Toggle("Enable resource alerts", isOn: $alertManager.alertsEnabled)
+
+                            if alertManager.alertsEnabled {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    // CPU Alert
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Text("CPU Threshold")
+                                                .font(.system(size: 12, weight: .medium))
+                                            Spacer()
+                                            Text("\(Int(alertManager.cpuThreshold))%")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundColor(.orange)
+                                        }
+                                        Slider(value: $alertManager.cpuThreshold, in: 50...100, step: 5)
+                                    }
+
+                                    Divider()
+
+                                    // Memory Alert
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Text("Memory Threshold")
+                                                .font(.system(size: 12, weight: .medium))
+                                            Spacer()
+                                            Text("\(Int(alertManager.memoryThreshold))%")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundColor(.orange)
+                                        }
+                                        Slider(value: $alertManager.memoryThreshold, in: 50...100, step: 5)
+                                    }
+
+                                    Divider()
+
+                                    // Disk Alert
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Text("Disk Threshold")
+                                                .font(.system(size: 12, weight: .medium))
+                                            Spacer()
+                                            Text("\(Int(alertManager.diskThreshold))%")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundColor(.orange)
+                                        }
+                                        Slider(value: $alertManager.diskThreshold, in: 50...100, step: 5)
+                                    }
+                                }
+
+                                Text("Notifications are sent when usage exceeds threshold (max once every 5 minutes)")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }
@@ -135,7 +215,51 @@ struct SettingsView: View {
                 .padding()
             }
         }
-        .frame(width: 500, height: 600)
+    }
+
+    private func toggleLaunchAtStartup(enabled: Bool) {
+        if #available(macOS 13.0, *) {
+            do {
+                if enabled {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                print("Failed to \(enabled ? "enable" : "disable") launch at startup: \(error.localizedDescription)")
+            }
+        } else {
+            // Fallback for macOS 12 and earlier using Legacy Login Items
+            if enabled {
+                // Add to login items using AppleScript
+                let script = """
+                tell application "System Events"
+                    make login item at end with properties {path:"\(Bundle.main.bundlePath)", hidden:false}
+                end tell
+                """
+                var error: NSDictionary?
+                if let scriptObject = NSAppleScript(source: script) {
+                    scriptObject.executeAndReturnError(&error)
+                    if let error = error {
+                        print("AppleScript error: \(error)")
+                    }
+                }
+            } else {
+                // Remove from login items using AppleScript
+                let script = """
+                tell application "System Events"
+                    delete login item "PeakView"
+                end tell
+                """
+                var error: NSDictionary?
+                if let scriptObject = NSAppleScript(source: script) {
+                    scriptObject.executeAndReturnError(&error)
+                    if let error = error {
+                        print("AppleScript error: \(error)")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -146,20 +270,47 @@ struct SettingsSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(.accentColor)
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.7), .cyan.opacity(0.7)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
             }
 
             VStack(alignment: .leading, spacing: 12) {
                 content
             }
-            .padding()
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(NSColor.controlBackgroundColor))
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.darkCard)
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.2), .cyan.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
         }
     }
@@ -167,6 +318,6 @@ struct SettingsSection<Content: View>: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView(configManager: ConfigManager())
+        SettingsView(configManager: ConfigManager(), alertManager: AlertManager())
     }
 }

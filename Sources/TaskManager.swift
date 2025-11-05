@@ -55,9 +55,13 @@ class TaskManager: ObservableObject {
             let cpuTotal = processes.reduce(0.0) { $0 + $1.cpuUsage }
             let memoryTotal = processes.reduce(0.0) { $0 + $1.memoryMB }
 
+            // Get number of CPU cores for proper percentage calculation
+            let coreCount = Double(ProcessInfo.processInfo.processorCount)
+            let normalizedCPU = (cpuTotal / coreCount).rounded(toPlaces: 1)
+
             DispatchQueue.main.async {
                 self.processes = processes
-                self.totalCPU = cpuTotal
+                self.totalCPU = normalizedCPU
                 self.totalMemory = memoryTotal
             }
         }
@@ -73,7 +77,7 @@ class TaskManager: ObservableObject {
         task.standardOutput = pipe
         task.standardError = Pipe()
         task.arguments = ["-c", "ps -Aceo pid,pcpu,rss,comm -r"]
-        task.launchPath = "/bin/bash"
+        task.executableURL = URL(fileURLWithPath: "/bin/bash")
 
         do {
             try task.run()
@@ -126,7 +130,7 @@ class TaskManager: ObservableObject {
         task.standardOutput = pipe
         task.standardError = Pipe()
         task.arguments = ["-c", "ps -p \(pid) -o comm="]
-        task.launchPath = "/bin/bash"
+        task.executableURL = URL(fileURLWithPath: "/bin/bash")
 
         do {
             try task.run()
@@ -137,7 +141,8 @@ class TaskManager: ObservableObject {
                 return path
             }
         } catch {
-            // Ignore
+            // Ignore errors silently
+            print("Failed to get process path for PID \(pid): \(error.localizedDescription)")
         }
 
         return ""
@@ -145,7 +150,7 @@ class TaskManager: ObservableObject {
 
     func killProcess(pid: Int32) -> Bool {
         let task = Process()
-        task.launchPath = "/bin/kill"
+        task.executableURL = URL(fileURLWithPath: "/bin/kill")
         task.arguments = ["-9", "\(pid)"]
 
         do {
@@ -159,6 +164,7 @@ class TaskManager: ObservableObject {
 
             return task.terminationStatus == 0
         } catch {
+            print("Failed to kill process \(pid): \(error.localizedDescription)")
             return false
         }
     }
@@ -171,7 +177,7 @@ class TaskManager: ObservableObject {
             // Wait a moment then restart
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1.0) {
                 let task = Process()
-                task.launchPath = "/usr/bin/open"
+                task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
                 task.arguments = ["-a", process.path]
 
                 do {
@@ -208,5 +214,12 @@ class TaskManager: ObservableObject {
             return processes
         }
         return processes.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+    }
+}
+
+extension Double {
+    func rounded(toPlaces places: Int) -> Double {
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
     }
 }

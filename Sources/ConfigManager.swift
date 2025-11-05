@@ -2,13 +2,22 @@ import Foundation
 import SwiftUI
 import AppKit
 
-enum MetricSection: String, Codable, CaseIterable {
+enum MetricSection: String, Codable, CaseIterable, Identifiable {
     case cpu = "CPU"
     case memory = "Memory"
     case network = "Network"
     case disk = "Disk"
     case battery = "Battery"
+    case temperature = "Temperature"
+    case fan = "Fan"
     case privacy = "Privacy"
+
+    var id: String { rawValue }
+}
+
+enum MetricDisplayMode: String, Codable {
+    case graph = "graph"
+    case gauge = "gauge"
 }
 
 enum ViewMode: String, Codable {
@@ -24,8 +33,24 @@ struct Config: Codable {
     var showGraphs: Bool = true
     var updateInterval: Double = 2.0
     var theme: String = "system"
-    var sectionOrder: [MetricSection] = [.cpu, .memory, .network, .disk, .battery, .privacy]
+    var sectionOrder: [MetricSection] = [.cpu, .memory, .network, .disk, .temperature, .fan, .battery, .privacy]
     var viewMode: ViewMode = .simple
+
+    // Metric display modes (graph vs gauge)
+    var metricDisplayModes: [String: MetricDisplayMode] = [
+        "CPU": .graph,
+        "Memory": .graph,
+        "Network": .graph,
+        "Disk": .graph,
+        "Temperature": .gauge,
+        "Fan": .gauge,
+        "Battery": .graph
+    ]
+
+    // Window settings
+    var showWindowOnLaunch: Bool = true
+    var keepMenuBarWhenWindowClosed: Bool = true
+    var launchAtStartup: Bool = false
 
     static let `default` = Config()
 }
@@ -40,6 +65,9 @@ class ConfigManager: ObservableObject {
 
     @Published var showSettings: Bool = false
     @Published var showTaskManager: Bool = false
+
+    // Callback to show settings (can be window or tab depending on context)
+    var onShowSettings: (() -> Void)?
 
     private let configURL: URL
 
@@ -76,6 +104,28 @@ class ConfigManager: ObservableObject {
                 config.sectionOrder.append(.privacy)
                 saveConfig()
             }
+
+            // Migrate old configs - add temperature if missing
+            if !config.sectionOrder.contains(.temperature) {
+                // Insert temperature before battery or at end
+                if let batteryIndex = config.sectionOrder.firstIndex(of: .battery) {
+                    config.sectionOrder.insert(.temperature, at: batteryIndex)
+                } else {
+                    config.sectionOrder.append(.temperature)
+                }
+                saveConfig()
+            }
+
+            // Migrate old configs - add fan if missing
+            if !config.sectionOrder.contains(.fan) {
+                // Insert fan after temperature or at end
+                if let tempIndex = config.sectionOrder.firstIndex(of: .temperature) {
+                    config.sectionOrder.insert(.fan, at: tempIndex + 1)
+                } else {
+                    config.sectionOrder.append(.fan)
+                }
+                saveConfig()
+            }
         } else {
             config = Config.default
             saveConfig()
@@ -107,12 +157,19 @@ class ConfigManager: ObservableObject {
                 newAppearance = nil // System default
             }
 
+            // Apply to app globally
             NSApp.appearance = newAppearance
 
-            // Force refresh all windows
+            // Force refresh all windows including popovers
             for window in NSApp.windows {
                 window.appearance = newAppearance
+                // Force view hierarchy to update
+                window.contentView?.needsDisplay = true
+                window.contentView?.needsLayout = true
             }
+
+            // Trigger a view refresh by toggling a published property
+            self.objectWillChange.send()
         }
     }
 }

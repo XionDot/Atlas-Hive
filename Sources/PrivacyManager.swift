@@ -202,7 +202,7 @@ class PrivacyManager: ObservableObject {
         task.standardOutput = pipe
         task.standardError = errorPipe  // Separate stderr to avoid noise
         task.arguments = ["-c", command]
-        task.launchPath = "/bin/bash"
+        task.executableURL = URL(fileURLWithPath: "/bin/bash")
         task.standardInput = nil
 
         do {
@@ -213,6 +213,7 @@ class PrivacyManager: ObservableObject {
             let output = String(data: data, encoding: .utf8) ?? ""
             return output
         } catch {
+            print("Failed to execute command: \(error.localizedDescription)")
             return ""
         }
     }

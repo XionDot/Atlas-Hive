@@ -33,7 +33,7 @@ struct TaskManagerView: View {
                 .help("Refresh")
             }
             .padding()
-            .background(Color.accentColor.opacity(0.1))
+            .background(Color.darkCard)
 
             // System summary
             HStack(spacing: 16) {
@@ -73,7 +73,7 @@ struct TaskManagerView: View {
                 }
             }
             .padding()
-            .background(Color.blue.opacity(0.05))
+            .background(Color.darkCard.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
             .padding(.top, 8)
@@ -96,7 +96,7 @@ struct TaskManagerView: View {
                 }
             }
             .padding(8)
-            .background(Color.gray.opacity(0.1))
+            .background(Color.darkCard.opacity(0.5))
             .cornerRadius(8)
             .padding(.horizontal)
             .padding(.top, 8)
@@ -161,7 +161,7 @@ struct TaskManagerView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.gray.opacity(0.05))
+            .background(Color.darkCard.opacity(0.5))
 
             Divider()
 
@@ -197,9 +197,10 @@ struct TaskManagerView: View {
                 Spacer()
             }
             .padding(8)
-            .background(Color.gray.opacity(0.05))
+            .background(Color.darkCard.opacity(0.5))
         }
         .frame(width: 600, height: 500)
+        .background(Color.darkBackground)
         .alert("Kill Process?", isPresented: $showingKillConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Kill", role: .destructive) {

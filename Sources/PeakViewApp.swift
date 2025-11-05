@@ -15,16 +15,32 @@ struct PeakViewApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
+    var mainWindow: NSWindow?
     var systemMonitor: SystemMonitor?
+    var taskManager: TaskManager?
     var configManager: ConfigManager?
     var privacyManager: PrivacyManager?
+    var alertManager: AlertManager?
     var eventMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Initialize managers
         configManager = ConfigManager()
         systemMonitor = SystemMonitor()
+        taskManager = TaskManager()
         privacyManager = PrivacyManager()
+        alertManager = AlertManager()
+
+        // Setup callback for settings button to show main window with settings open
+        configManager?.onShowSettings = { [weak self] in
+            guard let self = self else { return }
+            // Show the main window first
+            self.showMainWindow()
+            // Then trigger settings panel to open
+            DispatchQueue.main.async {
+                self.configManager?.showSettings = true
+            }
+        }
 
         // Create menu bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -39,19 +55,74 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup monitoring timer
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.updateMenuBarDisplay()
+            self?.checkResourceAlerts()
         }
 
-        // Create popover
+        // Create popover (for compact menu bar view)
         let popover = NSPopover()
         popover.contentSize = NSSize(width: 360, height: 600)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: ContentView(
                 systemMonitor: systemMonitor!,
-                configManager: configManager!
+                configManager: configManager!,
+                alertManager: alertManager!
             )
         )
         self.popover = popover
+
+        // Create main window with two-column layout
+        createMainWindow()
+
+        // Show main window on first launch
+        if configManager?.config.showWindowOnLaunch ?? true {
+            showMainWindow()
+        }
+    }
+
+    func createMainWindow() {
+        guard let systemMonitor = systemMonitor,
+              let taskManager = taskManager,
+              let configManager = configManager,
+              let alertManager = alertManager else { return }
+
+        let mainView = MainWindowView(
+            monitor: systemMonitor,
+            taskManager: taskManager,
+            configManager: configManager,
+            alertManager: alertManager
+        )
+
+        let hostingController = NSHostingController(rootView: mainView)
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "PeakView"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.setContentSize(NSSize(width: 1200, height: 700))
+        window.minSize = NSSize(width: 1200, height: 700)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+
+        // Configure fullscreen to show menu bar
+        window.collectionBehavior = [.fullScreenPrimary, .fullScreenAllowsTiling]
+
+        // Set pure black background for title bar
+        window.backgroundColor = .black
+
+        self.mainWindow = window
+    }
+
+    func showMainWindow() {
+        guard let window = mainWindow else { return }
+
+        // Ensure window is visible and brought to front
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+
+        // Activate the app
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc func handleClick(_ sender: NSStatusBarButton) {
@@ -60,7 +131,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if event.type == .rightMouseUp {
             showMenu()
         } else {
-            togglePopover()
+            // Smart click behavior based on window state
+            if let window = mainWindow {
+                if window.isMiniaturized {
+                    // Window is minimized - restore it
+                    window.deminiaturize(nil)
+                    showMainWindow()
+                } else if window.isVisible {
+                    // Window is open and visible - show main window
+                    showMainWindow()
+                } else {
+                    // Window is closed (hidden) - show popover
+                    togglePopover()
+                }
+            } else {
+                // Fallback - show popover
+                togglePopover()
+            }
         }
     }
 
@@ -102,10 +189,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Task Manager
-        let taskManagerItem = NSMenuItem(title: "Task Manager", action: #selector(openTaskManager), keyEquivalent: "")
-        taskManagerItem.target = self
-        menu.addItem(taskManagerItem)
+        // Show Window
+        let showWindowItem = NSMenuItem(title: "Show PeakView Window", action: #selector(showMainWindowMenu), keyEquivalent: "")
+        showWindowItem.target = self
+        menu.addItem(showWindowItem)
+
+        // Fullscreen toggle
+        let fullscreenTitle = mainWindow?.styleMask.contains(.fullScreen) == true ? "Exit Fullscreen" : "Enter Fullscreen"
+        let fullscreenItem = NSMenuItem(title: fullscreenTitle, action: #selector(toggleFullscreen), keyEquivalent: "f")
+        fullscreenItem.target = self
+        menu.addItem(fullscreenItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -131,18 +224,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         privacyManager?.toggleUSB()
     }
 
-    @objc func openTaskManager() {
-        // Open task manager in a new window
-        let taskManager = TaskManager()
-        let taskManagerView = TaskManagerView(taskManager: taskManager)
-        let hostingController = NSHostingController(rootView: taskManagerView)
+    @objc func showMainWindowMenu() {
+        showMainWindow()
+    }
 
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Task Manager"
-        window.styleMask = [.titled, .closable, .resizable]
-        window.setContentSize(NSSize(width: 600, height: 500))
-        window.center()
-        window.makeKeyAndOrderFront(nil)
+    @objc func toggleFullscreen() {
+        mainWindow?.toggleFullScreen(nil)
     }
 
     @objc func quit() {
@@ -271,7 +358,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         image.unlockFocus()
 
-        image.isTemplate = false
+        image.isTemplate = true
         return image
     }
 
@@ -325,5 +412,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         image.unlockFocus()
         image.isTemplate = true
         return image
+    }
+
+    func checkResourceAlerts() {
+        guard let monitor = systemMonitor, let alertManager = alertManager else { return }
+
+        alertManager.checkResourceUsage(
+            cpu: monitor.cpuUsage,
+            memory: monitor.memoryUsage,
+            disk: monitor.diskUsage
+        )
+    }
+}
+
+// MARK: - NSWindowDelegate
+extension AppDelegate: NSWindowDelegate {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // Hide window instead of closing it (keeping menu bar active)
+        if sender == mainWindow {
+            if configManager?.config.keepMenuBarWhenWindowClosed ?? true {
+                mainWindow?.orderOut(nil)
+                return false
+            }
+        }
+        return true
     }
 }

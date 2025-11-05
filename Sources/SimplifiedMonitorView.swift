@@ -10,10 +10,22 @@ struct SimplifiedMonitorView: View {
             // Scrollable content
             ScrollView {
                 VStack(spacing: 16) {
-                    // Header with mode toggle
+                    // Header with mode toggle - Modern design
                     HStack {
-                Text("System Monitor")
-                    .font(.system(size: 18, weight: .semibold))
+                HStack(spacing: 8) {
+                    Image(systemName: "chart.xyaxis.line")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+
+                    Text("System Monitor")
+                        .font(.system(size: 16, weight: .bold))
+                }
 
                 Spacer()
 
@@ -23,8 +35,16 @@ struct SimplifiedMonitorView: View {
                     }
                 }) {
                     Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
-                        .font(.system(size: 14))
-                        .foregroundColor(.blue)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("System Information")
@@ -36,22 +56,36 @@ struct SimplifiedMonitorView: View {
                         Image(systemName: "slider.horizontal.3")
                         Text("Advanced")
                     }
-                    .font(.system(size: 11))
-                    .foregroundColor(.blue)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(6)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help("Switch to Advanced Mode")
 
                 Button(action: {
                     NSApplication.shared.terminate(nil)
                 }) {
                     Image(systemName: "power")
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.red)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Quit PeakView")
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 12)
 
             // System Information Panel
             if showSystemInfo {
@@ -83,7 +117,7 @@ struct SimplifiedMonitorView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.blue.opacity(0.2), lineWidth: 1)
                 )
-                .transition(.opacity.combined(with: .scale))
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             // Simple status cards
@@ -124,6 +158,24 @@ struct SimplifiedMonitorView: View {
                     color: colorForPercentage(monitor.diskUsage)
                 )
 
+                // Temperature Status
+                StatusCard(
+                    icon: "thermometer.medium",
+                    title: "Temperature",
+                    status: tempStatus(monitor.cpuTemperature),
+                    value: monitor.cpuTemperature,
+                    color: temperatureColor(monitor.cpuTemperature)
+                )
+
+                // Fan Status
+                StatusCard(
+                    icon: "fan",
+                    title: "Fans",
+                    status: monitor.fanSpeed != "N/A" ? "Active" : "Inactive",
+                    value: monitor.fanSpeed,
+                    color: .cyan
+                )
+
                 // Battery Status (if available on laptops)
                 if monitor.batteryLevel >= 0 {
                     StatusCard(
@@ -139,40 +191,62 @@ struct SimplifiedMonitorView: View {
                 .padding(16)
             }
 
-            // Quick action buttons - fixed at bottom
+            // Quick action buttons - fixed at bottom with modern gradients
             HStack(spacing: 12) {
                 Button(action: {
                     configManager.showTaskManager = true
                 }) {
-                    HStack {
+                    HStack(spacing: 6) {
                         Image(systemName: "app.badge.fill")
+                            .font(.system(size: 14, weight: .semibold))
                         Text("Open Apps")
+                            .font(.system(size: 13, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.blue)
+                    .padding(.vertical, 11)
+                    .background(
+                        LinearGradient(
+                            colors: [.green, .mint],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .foregroundColor(.white)
                     .cornerRadius(8)
+                    .shadow(color: .green.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help("Open Task Manager")
 
                 Button(action: {
-                    configManager.showSettings = true
+                    configManager.onShowSettings?()
                 }) {
-                    HStack {
+                    HStack(spacing: 6) {
                         Image(systemName: "gearshape.fill")
+                            .font(.system(size: 14, weight: .semibold))
                         Text("Settings")
+                            .font(.system(size: 13, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.gray.opacity(0.2))
-                    .foregroundColor(.primary)
+                    .padding(.vertical, 11)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundColor(.white)
                     .cornerRadius(8)
+                    .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help("Open Settings")
             }
             .padding(16)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Color.darkCard)
         }
         .frame(width: 340)
     }
@@ -266,6 +340,32 @@ struct SimplifiedMonitorView: View {
             return .red
         }
     }
+
+    private func temperatureColor(_ temp: String) -> Color {
+        // Extract numeric value from temperature string (e.g., "45°C" -> 45)
+        let numericString = temp.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        guard let tempValue = Double(numericString) else { return .blue }
+
+        // Color based on temperature (assuming Celsius)
+        switch tempValue {
+        case 0..<50: return .green
+        case 50..<70: return .yellow
+        case 70..<85: return .orange
+        default: return .red
+        }
+    }
+
+    private func tempStatus(_ temp: String) -> String {
+        let numericString = temp.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        guard let tempValue = Double(numericString) else { return "Unknown" }
+
+        switch tempValue {
+        case 0..<50: return "Cool"
+        case 50..<70: return "Warm"
+        case 70..<85: return "Hot"
+        default: return "Critical"
+        }
+    }
 }
 
 struct StatusCard: View {
@@ -277,20 +377,25 @@ struct StatusCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Icon
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(color)
-                .frame(width: 36, height: 36)
+            // Icon with gradient background
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(color.opacity(0.15))
+                    .frame(width: 36, height: 36)
+
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(color)
+            }
 
             // Title and status
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.primary)
 
                 Text(status)
-                    .font(.system(size: 11))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.secondary)
             }
 
@@ -298,13 +403,18 @@ struct StatusCard: View {
 
             // Value
             Text(value)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(color)
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.1))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.darkCard)
+                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(color.opacity(0.2), lineWidth: 1)
         )
     }
 }

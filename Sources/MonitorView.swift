@@ -10,18 +10,38 @@ struct MonitorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
+            // Header - Modern design matching SimplifiedMonitorView
+            HStack(spacing: 8) {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
                 Text("PeakView")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
+                    .fixedSize()
+
                 Spacer()
 
                 Button(action: {
                     showSystemInfo.toggle()
                 }) {
                     Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
-                        .font(.system(size: 16))
-                        .foregroundColor(.blue)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("System Information")
@@ -33,10 +53,22 @@ struct MonitorView: View {
                         Image(systemName: "square.grid.2x2")
                         Text("Simple")
                     }
-                    .font(.system(size: 11))
-                    .foregroundColor(.blue)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(6)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .fixedSize()
                 .help("Switch to Simple Mode")
 
                 Button(action: {
@@ -45,8 +77,14 @@ struct MonitorView: View {
                     }
                 }) {
                     Image(systemName: isReorderMode ? "checkmark" : "arrow.up.arrow.down")
-                        .font(.system(size: 16))
-                        .foregroundColor(isReorderMode ? .green : .primary)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            isReorderMode ?
+                                LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                LinearGradient(colors: [.secondary], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(isReorderMode ? "Done Reordering" : "Reorder Sections")
@@ -55,16 +93,34 @@ struct MonitorView: View {
                     configManager.showTaskManager.toggle()
                 }) {
                     Image(systemName: "list.bullet.rectangle")
-                        .font(.system(size: 16))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.green, .mint],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Task Manager")
 
                 Button(action: {
-                    configManager.showSettings.toggle()
+                    configManager.onShowSettings?()
                 }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 16))
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Settings")
@@ -73,14 +129,17 @@ struct MonitorView: View {
                     NSApplication.shared.terminate(nil)
                 }) {
                     Image(systemName: "power")
-                        .font(.system(size: 16))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.red)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Quit PeakView")
             }
-            .padding()
-            .background(Color.accentColor.opacity(0.1))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.darkCard)
 
             // System Information Panel
             if showSystemInfo {
@@ -153,6 +212,12 @@ struct MonitorView: View {
             DetailedNetworkCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
         case .disk:
             DetailedDiskCard(systemMonitor: systemMonitor, showGraph: configManager.config.showGraphs)
+        case .temperature:
+            // Temperature card - will be added to menu bar advanced view
+            EmptyView()
+        case .fan:
+            // Fan card - will be added to menu bar advanced view
+            EmptyView()
         case .battery:
             if systemMonitor.batteryLevel >= 0 {
                 DetailedBatteryCard(systemMonitor: systemMonitor)
@@ -238,7 +303,7 @@ struct MetricCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -336,7 +401,7 @@ struct NetworkCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -447,7 +512,7 @@ struct BatteryCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -512,7 +577,7 @@ struct PrivacyCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -647,7 +712,7 @@ struct DetailedCPUCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -726,7 +791,7 @@ struct DetailedMemoryCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -804,7 +869,7 @@ struct DetailedDiskCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -896,7 +961,7 @@ struct DetailedNetworkCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -973,7 +1038,7 @@ struct DetailedBatteryCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }

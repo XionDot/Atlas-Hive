@@ -2,6 +2,10 @@
 
 echo "Installing PeakView to /Applications..."
 
+# Kill any running PeakView processes first
+echo "Killing any running PeakView processes..."
+killall -9 PeakView 2>/dev/null || true
+
 # Remove old version if exists
 if [ -d "/Applications/PeakView.app" ]; then
     echo "Removing old version..."
