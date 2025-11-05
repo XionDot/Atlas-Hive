@@ -16,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var mainWindow: NSWindow?
+    var loadingWindow: NSWindow?
     var systemMonitor: SystemMonitor?
     var taskManager: TaskManager?
     var configManager: ConfigManager?
@@ -24,8 +25,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var eventMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Initialize managers
+        // Initialize config manager first to get theme
         configManager = ConfigManager()
+
+        // Show loading screen with app theme
+        showLoadingScreen()
+
+        // Initialize other managers
         systemMonitor = SystemMonitor()
         taskManager = TaskManager()
         privacyManager = PrivacyManager()
@@ -71,13 +77,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         self.popover = popover
 
+        // Give config manager reference to popover for theme updates
+        configManager?.popover = popover
+
         // Create main window with two-column layout
         createMainWindow()
 
-        // Show main window on first launch
-        if configManager?.config.showWindowOnLaunch ?? true {
-            showMainWindow()
-        }
+        // Apply theme after windows are created
+        configManager?.applyTheme()
+
+        // Note: Main window will be shown after loading screen completes in hideLoadingScreen()
     }
 
     func createMainWindow() {
@@ -332,52 +341,62 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSColor.clear.setFill()
         NSBezierPath(rect: NSRect(x: 0, y: 0, width: width, height: height)).fill()
 
-        // Draw CPU bar (blue)
+        // Draw CPU bar (white for dark menu bar)
         let cpuHeight = max(1, (cpuValue / 100.0) * height)
-        NSColor.systemBlue.setFill()
+        NSColor.white.setFill()
         let cpuRect = NSRect(x: spacing, y: 0, width: barWidth, height: cpuHeight)
         NSBezierPath(rect: cpuRect).fill()
 
         // Draw CPU outline
-        NSColor.systemBlue.withAlphaComponent(0.3).setStroke()
+        NSColor.white.withAlphaComponent(0.3).setStroke()
         let cpuOutline = NSBezierPath(rect: NSRect(x: spacing, y: 0, width: barWidth, height: height))
         cpuOutline.lineWidth = 0.5
         cpuOutline.stroke()
 
-        // Draw Memory bar (green)
+        // Draw Memory bar (white for dark menu bar)
         let memHeight = max(1, (memoryValue / 100.0) * height)
-        NSColor.systemGreen.setFill()
+        NSColor.white.setFill()
         let memRect = NSRect(x: spacing + barWidth + spacing, y: 0, width: barWidth, height: memHeight)
         NSBezierPath(rect: memRect).fill()
 
         // Draw Memory outline
-        NSColor.systemGreen.withAlphaComponent(0.3).setStroke()
+        NSColor.white.withAlphaComponent(0.3).setStroke()
         let memOutline = NSBezierPath(rect: NSRect(x: spacing + barWidth + spacing, y: 0, width: barWidth, height: height))
         memOutline.lineWidth = 0.5
         memOutline.stroke()
 
         image.unlockFocus()
 
-        image.isTemplate = true
+        // No isTemplate - always white for dark menu bar
         return image
     }
 
     func createDefaultMenuBarIcon() -> NSImage {
-        // Using alert_status icon as final choice
+        // Try to load the PNG icon and tint it white
         let iconName = "alert_status_menubar"
 
-        // Try to load from Resources folder (for installed app)
         if let resourcePath = Bundle.main.resourcePath {
             let iconPath = "\(resourcePath)/menubar_icons/\(iconName)@2x.png"
-            if let image = NSImage(contentsOfFile: iconPath) {
-                // Set the size to 18x18 for menu bar, macOS will use the @2x for retina
-                image.size = NSSize(width: 18, height: 18)
-                image.isTemplate = true
-                return image
+            if let sourceImage = NSImage(contentsOfFile: iconPath) {
+                // Create a white-tinted version
+                let size = NSSize(width: 18, height: 18)
+                let tintedImage = NSImage(size: size)
+
+                tintedImage.lockFocus()
+
+                // Draw the original image
+                sourceImage.draw(in: NSRect(origin: .zero, size: size))
+
+                // Apply white tint
+                NSColor.white.set()
+                NSRect(origin: .zero, size: size).fill(using: .sourceAtop)
+
+                tintedImage.unlockFocus()
+                return tintedImage
             }
         }
 
-        // Fallback: restore original circular gauge icon
+        // Fallback: draw white icon
         let size: CGFloat = 18
         let image = NSImage(size: NSSize(width: size, height: size))
         image.lockFocus()
@@ -391,7 +410,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let outerCircle = NSBezierPath()
         outerCircle.appendArc(withCenter: NSPoint(x: centerX, y: centerY), radius: radius, startAngle: 0, endAngle: 360)
-        NSColor.labelColor.withAlphaComponent(0.6).setStroke()
+        NSColor.white.withAlphaComponent(0.8).setStroke()
         outerCircle.lineWidth = 1.5
         outerCircle.stroke()
 
@@ -405,12 +424,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let height = barHeights[i]
             let y = centerY - height / 2
             let barRect = NSRect(x: x, y: y, width: barWidth, height: height)
-            NSColor.labelColor.withAlphaComponent(0.7).setFill()
+            NSColor.white.withAlphaComponent(0.9).setFill()
             NSBezierPath(rect: barRect).fill()
         }
 
         image.unlockFocus()
-        image.isTemplate = true
         return image
     }
 
@@ -422,6 +440,72 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             memory: monitor.memoryUsage,
             disk: monitor.diskUsage
         )
+    }
+
+    func showLoadingScreen() {
+        guard let configManager = configManager else { return }
+
+        // Create loading view with app theme
+        let loadingView = PeakViewLoadingView(
+            isShowing: .constant(true),
+            appTheme: configManager.config.theme
+        )
+
+        // Create window for loading screen
+        let hostingController = NSHostingController(rootView: loadingView)
+        let window = NSWindow(contentViewController: hostingController)
+        window.styleMask = [.borderless, .fullSizeContentView]
+
+        // Set background based on app theme
+        let isDarkMode: Bool
+        switch configManager.config.theme {
+        case "light":
+            isDarkMode = false
+        case "dark":
+            isDarkMode = true
+        default: // "system"
+            isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        }
+        window.backgroundColor = isDarkMode ? .black : .white
+
+        // Apply theme appearance to window
+        let appearance: NSAppearance?
+        switch configManager.config.theme {
+        case "light":
+            appearance = NSAppearance(named: .aqua)
+        case "dark":
+            appearance = NSAppearance(named: .darkAqua)
+        default:
+            appearance = nil
+        }
+        window.appearance = appearance
+
+        window.isOpaque = true
+        window.hasShadow = false
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .stationary]
+
+        // Set window size to match main window (1200x700)
+        window.setContentSize(NSSize(width: 1200, height: 700))
+        window.center()
+
+        self.loadingWindow = window
+        window.makeKeyAndOrderFront(nil)
+
+        // Schedule loading completion after 3.5 seconds (loading animation is 3 seconds + 0.5s buffer)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [weak self] in
+            self?.hideLoadingScreen()
+        }
+    }
+
+    func hideLoadingScreen() {
+        loadingWindow?.close()
+        loadingWindow = nil
+
+        // Show main window after loading completes (if configured)
+        if configManager?.config.showWindowOnLaunch ?? true {
+            showMainWindow()
+        }
     }
 }
 

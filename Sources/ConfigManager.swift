@@ -69,6 +69,9 @@ class ConfigManager: ObservableObject {
     // Callback to show settings (can be window or tab depending on context)
     var onShowSettings: (() -> Void)?
 
+    // Reference to popover for theme updates
+    weak var popover: NSPopover?
+
     private let configURL: URL
 
     init() {
@@ -157,15 +160,31 @@ class ConfigManager: ObservableObject {
                 newAppearance = nil // System default
             }
 
-            // Apply to app globally
-            NSApp.appearance = newAppearance
+            // DON'T apply to NSApp.appearance globally - this affects menu bar
+            // Only apply to specific content windows (not status bar or system windows)
 
-            // Force refresh all windows including popovers
+            // Apply to main window and popovers only
             for window in NSApp.windows {
-                window.appearance = newAppearance
-                // Force view hierarchy to update
-                window.contentView?.needsDisplay = true
-                window.contentView?.needsLayout = true
+                // Only apply theme to windows with titles or content view controllers
+                // Skip system windows (status bar, etc)
+                // Include popover windows (.class == NSPopover)
+                if window.title == "PeakView" ||
+                   (window.contentViewController != nil && window.styleMask.contains(.titled)) ||
+                   window.styleMask.contains(.borderless) ||
+                   String(describing: type(of: window)).contains("Popover") {
+                    window.appearance = newAppearance
+                    // Force view hierarchy to update
+                    window.contentView?.needsDisplay = true
+                    window.contentView?.needsLayout = true
+                }
+            }
+
+            // Apply theme directly to popover content view
+            if let popover = self.popover,
+               let contentViewController = popover.contentViewController {
+                contentViewController.view.appearance = newAppearance
+                contentViewController.view.needsDisplay = true
+                contentViewController.view.needsLayout = true
             }
 
             // Trigger a view refresh by toggling a published property

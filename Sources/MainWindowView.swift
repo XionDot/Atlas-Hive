@@ -702,60 +702,46 @@ struct TaskManagerColumn: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Combined header with title, filters, and refresh
-            VStack(spacing: 12) {
-                // Top row: Title
-                Text("Task Manager")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                // Bottom row: Filters and Refresh
-                HStack(spacing: 12) {
-                    // Quick Filters
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            FilterButton(title: "All", icon: "square.grid.2x2", isSelected: selectedFilter == .all) {
-                                selectedFilter = .all
-                            }
-                            FilterButton(title: "High CPU", icon: "cpu", isSelected: selectedFilter == .highCPU) {
-                                selectedFilter = .highCPU
-                            }
-                            FilterButton(title: "High Memory", icon: "memorychip", isSelected: selectedFilter == .highMemory) {
-                                selectedFilter = .highMemory
-                            }
-                            FilterButton(title: "My Apps", icon: "person.fill", isSelected: selectedFilter == .myApps) {
-                                selectedFilter = .myApps
-                            }
-                            FilterButton(title: "System", icon: "gear", isSelected: selectedFilter == .systemApps) {
-                                selectedFilter = .systemApps
-                            }
-                        }
-                    }
-
-                    Button(action: {
-                        taskManager.updateProcessList()
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.clockwise")
-                            Text("Refresh")
-                        }
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
+            // Header with title and filters
+            HStack {
+                // Title
+                HStack(spacing: 8) {
+                    Image(systemName: "list.bullet.rectangle")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(
                             LinearGradient(
                                 colors: [.green, .mint],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
                         )
-                        .cornerRadius(6)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Refresh Process List")
+
+                    Text("Task Manager")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(.primary)
                 }
+
+                Spacer()
+
+                // Refresh Button
+                Button(action: {
+                    taskManager.updateProcessList()
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.green, .mint],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 32, height: 32)
+                        .background(Color.clear)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+                .help("Refresh Process List")
             }
             .padding()
             .background(Color.darkCard)

@@ -75,14 +75,22 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Theme")
                                     .font(.system(size: 12))
-                                Picker("Theme", selection: $configManager.config.theme) {
-                                    Text("🔄 System Default").tag("system")
-                                    Text("☀️ Light").tag("light")
-                                    Text("🌙 Dark").tag("dark")
-                                }
-                                .pickerStyle(.menu)
-                                .onChange(of: configManager.config.theme) { _ in
-                                    configManager.applyTheme()
+
+                                HStack(spacing: 8) {
+                                    ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
+                                        configManager.config.theme = "system"
+                                        configManager.applyTheme()
+                                    }
+
+                                    ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
+                                        configManager.config.theme = "light"
+                                        configManager.applyTheme()
+                                    }
+
+                                    ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
+                                        configManager.config.theme = "dark"
+                                        configManager.applyTheme()
+                                    }
                                 }
                             }
                         }
@@ -91,14 +99,22 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Theme")
                                     .font(.system(size: 12))
-                                Picker("Theme", selection: $configManager.config.theme) {
-                                    Text("🔄 System Default").tag("system")
-                                    Text("☀️ Light").tag("light")
-                                    Text("🌙 Dark").tag("dark")
-                                }
-                                .pickerStyle(.menu)
-                                .onChange(of: configManager.config.theme) { _ in
-                                    configManager.applyTheme()
+
+                                HStack(spacing: 8) {
+                                    ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
+                                        configManager.config.theme = "system"
+                                        configManager.applyTheme()
+                                    }
+
+                                    ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
+                                        configManager.config.theme = "light"
+                                        configManager.applyTheme()
+                                    }
+
+                                    ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
+                                        configManager.config.theme = "dark"
+                                        configManager.applyTheme()
+                                    }
                                 }
                             }
                         }
@@ -313,6 +329,34 @@ struct SettingsSection<Content: View>: View {
                     )
             )
         }
+    }
+}
+
+// MARK: - Theme Button
+struct ThemeButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? Color.blue : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -2,21 +2,50 @@ import SwiftUI
 import AppKit
 
 extension Color {
-    /// Pure black background for dark mode, system color for light mode
+    /// Adaptive background based on current theme
     static var darkBackground: Color {
-        if NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-            return Color.black  // Pure black for dark mode
-        } else {
-            return Color(NSColor.windowBackgroundColor)
+        // Check app's theme setting
+        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+            // Check if appearance is explicitly set (custom theme) or nil (system default)
+            if window.appearance == nil {
+                // System default - use standard macOS colors
+                return Color(NSColor.windowBackgroundColor)
+            } else {
+                // Custom theme set
+                let appearance = window.effectiveAppearance
+                if appearance.bestMatch(from: [.darkAqua, .aqua]) == .aqua {
+                    // white af theme
+                    return Color(NSColor.windowBackgroundColor)
+                } else {
+                    // black af theme - PURE BLACK #000000
+                    return Color(red: 0, green: 0, blue: 0)
+                }
+            }
         }
+        // Fallback
+        return Color(NSColor.windowBackgroundColor)
     }
 
-    /// Slightly lighter black for card backgrounds in dark mode
+    /// Adaptive card background
     static var darkCard: Color {
-        if NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-            return Color.black  // Pure black for cards too
-        } else {
-            return Color(NSColor.controlBackgroundColor)
+        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+            // Check if appearance is explicitly set (custom theme) or nil (system default)
+            if window.appearance == nil {
+                // System default - use standard macOS colors
+                return Color(NSColor.controlBackgroundColor)
+            } else {
+                // Custom theme set
+                let appearance = window.effectiveAppearance
+                if appearance.bestMatch(from: [.darkAqua, .aqua]) == .aqua {
+                    // white af theme
+                    return Color(NSColor.controlBackgroundColor)
+                } else {
+                    // black af theme - PURE BLACK #000000 (same as background for full black)
+                    return Color(red: 0, green: 0, blue: 0)
+                }
+            }
         }
+        // Fallback
+        return Color(NSColor.controlBackgroundColor)
     }
 }
