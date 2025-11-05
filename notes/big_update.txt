@@ -1,0 +1,3 @@
+Give it samaritan like ui dark and light mode.
+
+Add multi-device monitoring (maybe setup local mesh network to access everything. User based ao Admin (me the creator) cant access.

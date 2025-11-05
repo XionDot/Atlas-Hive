@@ -27,3 +27,10 @@ build/
 
 # Optional: releases (uncomment to exclude from git)
 # releases/
+
+# Logs and temporary files
+*.log
+*logs.txt
+console*.txt
+error.txt
+appcrash.txt

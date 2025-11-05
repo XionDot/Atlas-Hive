@@ -1,0 +1,17 @@
+3. Polish & UX Improvements ⚠️ (Partially done)
+✅ Animated transitions between modes (already working with SwiftUI)
+❌ Empty states for filters with no results
+❌ Better error handling and user feedback
+❌ Keyboard shortcuts (Cmd+W to close, Cmd+R to refresh, etc.)
+❌ Accessibility labels and VoiceOver support
+4. Potential Additional Features (Suggestions):
+💡 Export system report - Generate PDF/text report of current system state
+💡 Resource alerts - Notify when CPU/Memory exceeds threshold
+💡 Process search history - Remember recent searches
+💡 Custom color themes - Beyond just light/dark
+💡 Menu bar customization - Choose which metrics to show
+💡 Graph time range options - 30s/60s/5min views
+💡 Disk space warnings - Alert when running low
+💡 Network bandwidth limits - Track daily/monthly usage
+💡 CPU temperature monitoring - If supported by hardware
+💡 Battery cycle tracking - Historical battery health data

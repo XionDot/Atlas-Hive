@@ -68,19 +68,19 @@ Download the latest version from [GitHub Releases](https://github.com/ahmedzitou
 2. Generate the app icon (optional):
 
    ```bash
-   ./generate_icon.sh
+   ./scripts/generate_icon.sh
    ```
 
 3. Build the application:
 
    ```bash
-   ./build_app.sh
+   ./scripts/build_app.sh
    ```
 
 4. Install to Applications:
 
    ```bash
-   ./install.sh
+   ./scripts/install.sh
    ```
 
 The app will appear in your menu bar and run quietly in the background.
