@@ -97,7 +97,7 @@ struct NetworkMonitorPanel: View {
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.purple, .pink],
+                            colors: [.vibrantPurple, .vibrantPink],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -157,7 +157,7 @@ struct SystemMonitorColumn: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.blue, .cyan],
+                                colors: [.vibrantBlue, .vibrantCyan],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -225,7 +225,7 @@ struct SystemMonitorColumn: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(
                             showSystemInfo ?
-                                LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                LinearGradient(colors: [.vibrantGreen, .vibrantMint], startPoint: .topLeading, endPoint: .bottomTrailing) :
                                 LinearGradient(colors: [.secondary], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .frame(width: 32, height: 32)
@@ -245,7 +245,7 @@ struct SystemMonitorColumn: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.purple, .pink],
+                                colors: [.vibrantPurple, .vibrantPink],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -581,10 +581,10 @@ struct SystemMonitorColumn: View {
 
     private func colorForPercentage(_ percentage: Double) -> Color {
         switch percentage {
-        case 0..<40: return .green
-        case 40..<70: return .yellow
-        case 70..<90: return .orange
-        default: return .red
+        case 0..<40: return .vibrantGreen
+        case 40..<70: return .vibrantYellow
+        case 70..<90: return .vibrantOrange
+        default: return .vibrantRed
         }
     }
 
@@ -656,23 +656,23 @@ struct SystemMonitorColumn: View {
     }
 
     private func batteryColor() -> Color {
-        if monitor.isCharging { return .green }
-        if monitor.batteryLevel > 50 { return .green }
-        if monitor.batteryLevel > 20 { return .yellow }
-        return .red
+        if monitor.isCharging { return .vibrantGreen }
+        if monitor.batteryLevel > 50 { return .vibrantGreen }
+        if monitor.batteryLevel > 20 { return .vibrantYellow }
+        return .vibrantRed
     }
 
     private func temperatureColor(_ temp: String) -> Color {
         // Extract numeric value from temperature string (e.g., "45°C" -> 45)
         let numericString = temp.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-        guard let tempValue = Double(numericString) else { return .blue }
+        guard let tempValue = Double(numericString) else { return .vibrantBlue }
 
         // Color based on temperature (assuming Celsius)
         switch tempValue {
-        case 0..<50: return .green
-        case 50..<70: return .yellow
-        case 70..<85: return .orange
-        default: return .red
+        case 0..<50: return .vibrantGreen
+        case 50..<70: return .vibrantYellow
+        case 70..<85: return .vibrantOrange
+        default: return .vibrantRed
         }
     }
 
@@ -710,7 +710,7 @@ struct TaskManagerColumn: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.green, .mint],
+                                colors: [.vibrantGreen, .vibrantMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -731,7 +731,7 @@ struct TaskManagerColumn: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.green, .mint],
+                                colors: [.vibrantGreen, .vibrantMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -745,6 +745,31 @@ struct TaskManagerColumn: View {
             }
             .padding()
             .background(Color.darkCard)
+
+            // Filters (only in advanced mode)
+            if configManager.config.viewMode == .advanced {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        FilterButton(title: "All", icon: "square.grid.2x2", isSelected: selectedFilter == .all) {
+                            selectedFilter = .all
+                        }
+                        FilterButton(title: "High CPU", icon: "cpu", isSelected: selectedFilter == .highCPU) {
+                            selectedFilter = .highCPU
+                        }
+                        FilterButton(title: "High Memory", icon: "memorychip", isSelected: selectedFilter == .highMemory) {
+                            selectedFilter = .highMemory
+                        }
+                        FilterButton(title: "My Apps", icon: "person.fill", isSelected: selectedFilter == .myApps) {
+                            selectedFilter = .myApps
+                        }
+                        FilterButton(title: "System", icon: "gear", isSelected: selectedFilter == .systemApps) {
+                            selectedFilter = .systemApps
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.vertical, 8)
+            }
 
             // Search bar
             HStack {
@@ -1167,15 +1192,15 @@ struct AdvancedProcessRow: View {
     }
 
     private func cpuColor(for usage: Double) -> Color {
-        if usage > 50 { return .red }
-        if usage > 25 { return .orange }
-        return .green
+        if usage > 50 { return .vibrantRed }
+        if usage > 25 { return .vibrantOrange }
+        return .vibrantGreen
     }
 
     private func memoryColor(for mb: Double) -> Color {
-        if mb > 500 { return .red }
-        if mb > 200 { return .orange }
-        return .green
+        if mb > 500 { return .vibrantRed }
+        if mb > 200 { return .vibrantOrange }
+        return .vibrantGreen
     }
 
     private func formatMemory(_ mb: Double) -> String {
@@ -1408,7 +1433,7 @@ struct SystemInfoPanel: View {
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.green, .mint],
+                            colors: [.vibrantGreen, .vibrantMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )

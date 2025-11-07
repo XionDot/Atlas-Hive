@@ -1,3 +1,11 @@
+5 nov 2025
 Give it samaritan like ui dark and light mode.
 
 Add multi-device monitoring (maybe setup local mesh network to access everything. User based ao Admin (me the creator) cant access.
+
+6 nov 2025
+Windows, Unix coparts, so we can make an ecosystem. Must have the same design and ui.
+
+ASI integration.
+
+make black af colours more user friendly they should match the black so the colours work better.

@@ -428,15 +428,37 @@ struct ModularMetricBlock: View {
     // MARK: - Battery Content
     private var batteryContent: some View {
         VStack(spacing: 8) {
-            // Battery progress
+            // Battery percentage display
+            HStack {
+                Text("\(monitor.batteryLevel)%")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(batteryColor)
+                Spacer()
+
+                // Charging status or time remaining
+                if monitor.isCharging {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 12))
+                        Text("Charging")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundColor(.green)
+                } else if monitor.batteryTimeRemaining != "N/A" && monitor.batteryTimeRemaining != "Unknown" {
+                    Text(monitor.batteryTimeRemaining)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Battery progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: 4)
                         .fill(Color.gray.opacity(0.2))
-                        .frame(height: 20)
-                        .cornerRadius(10)
+                        .frame(height: 8)
 
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: 4)
                         .fill(
                             LinearGradient(
                                 colors: batteryGradient,
@@ -444,18 +466,22 @@ struct ModularMetricBlock: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: geometry.size.width * (Double(monitor.batteryLevel) / 100.0), height: 20)
-                        .cornerRadius(10)
+                        .frame(width: geometry.size.width * (Double(monitor.batteryLevel) / 100.0), height: 8)
                 }
             }
-            .frame(height: 20)
+            .frame(height: 8)
 
-            VStack(spacing: 4) {
-                MetricDetailRow(label: "Status", value: monitor.isCharging ? "Charging" : "On Battery")
+            VStack(alignment: .leading, spacing: 4) {
                 MetricDetailRow(label: "Health", value: "\(monitor.batteryHealth)%")
                 MetricDetailRow(label: "Cycles", value: "\(monitor.batteryCycles)")
+                if monitor.batteryCapacity != "N/A" && !monitor.batteryCapacity.isEmpty {
+                    MetricDetailRow(label: "Capacity", value: monitor.batteryCapacity)
+                }
+                if monitor.batteryWattage != "N/A" && !monitor.batteryWattage.isEmpty {
+                    MetricDetailRow(label: "Power", value: monitor.batteryWattage)
+                }
             }
-            .padding(.top, 8)
+            .font(.system(size: 10))
         }
     }
 
@@ -468,8 +494,34 @@ struct ModularMetricBlock: View {
         case .disk: return "internaldrive"
         case .temperature: return "thermometer.medium"
         case .fan: return "fan"
-        case .battery: return "battery.100.bolt"
+        case .battery: return batteryIcon()
         case .privacy: return "shield.lefthalf.filled"
+        }
+    }
+
+    private func batteryIcon() -> String {
+        if monitor.isCharging {
+            // Show charging icon with appropriate battery level
+            if monitor.batteryLevel > 80 {
+                return "battery.100.bolt"
+            } else if monitor.batteryLevel > 50 {
+                return "battery.75.bolt"
+            } else if monitor.batteryLevel > 25 {
+                return "battery.50.bolt"
+            } else {
+                return "battery.25.bolt"
+            }
+        } else {
+            // Show regular battery icon based on level
+            if monitor.batteryLevel > 80 {
+                return "battery.100"
+            } else if monitor.batteryLevel > 50 {
+                return "battery.75"
+            } else if monitor.batteryLevel > 25 {
+                return "battery.50"
+            } else {
+                return "battery.25"
+            }
         }
     }
 

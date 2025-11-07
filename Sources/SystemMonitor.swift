@@ -78,8 +78,11 @@ class SystemMonitor: ObservableObject {
     private var lastUpdateTime: Date = Date()
 
     private var timer: Timer?
+    private var smcHelper: SMCHelper?
 
     init() {
+        // Initialize SMC helper for hardware sensors
+        smcHelper = SMCHelper()
         loadSystemInfo()
         startMonitoring()
     }
@@ -274,27 +277,64 @@ class SystemMonitor: ObservableObject {
                 self.macAddress = detailedNetwork.macAddress
                 self.linkSpeed = detailedNetwork.linkSpeed
 
-                // Simulated Temperature and Fan metrics (until SMC access is implemented)
-                // Temperature roughly correlates with CPU usage (30°C base + CPU usage scaled)
-                let basetemp = 30.0
-                let tempVariation = (cpu / 100.0) * 40.0 // 0-40°C variation based on CPU
-                let cpuTemp = basetemp + tempVariation + Double.random(in: -2...2)
-                self.cpuTemperature = String(format: "%.0f°C", cpuTemp)
+                // Real Temperature and Fan metrics using SMC
+                if let smc = self.smcHelper {
+                    // CPU Temperature
+                    if let cpuTemp = smc.getCPUTemperature() {
+                        self.cpuTemperature = String(format: "%.0f°C", cpuTemp)
+                    } else {
+                        // Fallback to simulation if SMC fails
+                        let basetemp = 30.0
+                        let tempVariation = (cpu / 100.0) * 40.0
+                        let cpuTemp = basetemp + tempVariation + Double.random(in: -2...2)
+                        self.cpuTemperature = String(format: "%.0f°C", cpuTemp)
+                    }
 
-                // Disk temp is typically lower and more stable
-                self.diskTemperature = String(format: "%.0f°C", 35 + Double.random(in: -3...3))
+                    // Disk Temperature
+                    if let diskTemp = smc.getDiskTemperature() {
+                        self.diskTemperature = String(format: "%.0f°C", diskTemp)
+                    } else {
+                        // Fallback to simulation
+                        self.diskTemperature = String(format: "%.0f°C", 35 + Double.random(in: -3...3))
+                    }
 
-                // Battery temp (if battery exists)
-                if battery.level >= 0 {
-                    self.batteryTemperature = String(format: "%.0f°C", 32 + Double.random(in: -2...2))
+                    // Battery Temperature (if battery exists)
+                    if battery.level >= 0 {
+                        if let battTemp = smc.getBatteryTemperature() {
+                            self.batteryTemperature = String(format: "%.0f°C", battTemp)
+                        } else {
+                            // Fallback to simulation
+                            self.batteryTemperature = String(format: "%.0f°C", 32 + Double.random(in: -2...2))
+                        }
+                    }
+
+                    // Fan Speed
+                    if let avgFanSpeed = smc.getAverageFanSpeed(), avgFanSpeed > 0 {
+                        self.fanSpeed = String(format: "%.0f RPM", avgFanSpeed)
+                    } else {
+                        // Fallback to simulation if no fans or SMC fails
+                        let baseRPM = 1200.0
+                        let maxRPM = 5000.0
+                        let fanRPM = baseRPM + ((cpu / 100.0) * (maxRPM - baseRPM)) + Double.random(in: -100...100)
+                        self.fanSpeed = String(format: "%.0f RPM", max(0, fanRPM))
+                    }
+                } else {
+                    // SMC not available, use simulation
+                    let basetemp = 30.0
+                    let tempVariation = (cpu / 100.0) * 40.0
+                    let cpuTemp = basetemp + tempVariation + Double.random(in: -2...2)
+                    self.cpuTemperature = String(format: "%.0f°C", cpuTemp)
+                    self.diskTemperature = String(format: "%.0f°C", 35 + Double.random(in: -3...3))
+
+                    if battery.level >= 0 {
+                        self.batteryTemperature = String(format: "%.0f°C", 32 + Double.random(in: -2...2))
+                    }
+
+                    let baseRPM = 1200.0
+                    let maxRPM = 5000.0
+                    let fanRPM = baseRPM + ((cpu / 100.0) * (maxRPM - baseRPM)) + Double.random(in: -100...100)
+                    self.fanSpeed = String(format: "%.0f RPM", max(0, fanRPM))
                 }
-
-                // Fan speed roughly correlates with temperature/CPU usage
-                // Base RPM: 1200, scales up to 5000 RPM under load
-                let baseRPM = 1200.0
-                let maxRPM = 5000.0
-                let fanRPM = baseRPM + ((cpu / 100.0) * (maxRPM - baseRPM)) + Double.random(in: -100...100)
-                self.fanSpeed = String(format: "%.0f RPM", max(0, fanRPM))
 
                 // Track peak speeds
                 if network.download > self.peakDownload {
