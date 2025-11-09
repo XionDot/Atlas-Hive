@@ -60,11 +60,14 @@ struct ModularMetricBlock: View {
             // Header with toggle button
             HStack {
                 Image(systemName: iconFor(section))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(colorFor(section))
+                    .font(Font.samaritanHeader(size: 16))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanRed : colorFor(section))
 
-                Text(section == .temperature ? "Temperature & Fan" : section.rawValue)
-                    .font(.system(size: 15, weight: .bold))
+                let titleText = section == .temperature ? "Temperature & Fan" : section.rawValue
+                Text(Color.isSamaritanMode ? titleText.uppercased() : titleText)
+                    .font(Font.samaritanHeader(size: 15))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                    .samaritanSpacing()
 
                 Spacer()
 
@@ -76,11 +79,11 @@ struct ModularMetricBlock: View {
                             toggleDisplayMode(for: .temperature)
                         }) {
                             Image(systemName: displayMode(for: .temperature) == .gauge ? "thermometer.medium" : "chart.xyaxis.line")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(displayMode(for: .temperature) == .gauge ? .white : .orange)
+                                .font(Font.samaritanBody(size: 11))
+                                .foregroundColor(displayMode(for: .temperature) == .gauge ? .white : (Color.isSamaritanMode ? .samaritanOrange : .orange))
                                 .frame(width: 26, height: 26)
-                                .background(displayMode(for: .temperature) == .gauge ? Color.orange.opacity(0.8) : Color.orange.opacity(0.1))
-                                .cornerRadius(6)
+                                .background(displayMode(for: .temperature) == .gauge ? (Color.isSamaritanMode ? Color.samaritanOrange : Color.orange.opacity(0.8)) : (Color.isSamaritanMode ? Color.samaritanOrange.opacity(0.2) : Color.orange.opacity(0.1)))
+                                .samaritanCorners(6)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -90,11 +93,11 @@ struct ModularMetricBlock: View {
                             toggleDisplayMode(for: .fan)
                         }) {
                             Image(systemName: displayMode(for: .fan) == .gauge ? "fan" : "chart.xyaxis.line")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(displayMode(for: .fan) == .gauge ? .white : .cyan)
+                                .font(Font.samaritanBody(size: 11))
+                                .foregroundColor(displayMode(for: .fan) == .gauge ? .white : (Color.isSamaritanMode ? .samaritanAmber : .cyan))
                                 .frame(width: 26, height: 26)
-                                .background(displayMode(for: .fan) == .gauge ? Color.cyan.opacity(0.8) : Color.cyan.opacity(0.1))
-                                .cornerRadius(6)
+                                .background(displayMode(for: .fan) == .gauge ? (Color.isSamaritanMode ? Color.samaritanAmber : Color.cyan.opacity(0.8)) : (Color.isSamaritanMode ? Color.samaritanAmber.opacity(0.2) : Color.cyan.opacity(0.1)))
+                                .samaritanCorners(6)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -106,11 +109,11 @@ struct ModularMetricBlock: View {
                         toggleDisplayMode(for: .network)
                     }) {
                         Image(systemName: displayMode(for: .network) == .gauge ? "gauge.medium" : "chart.xyaxis.line")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.blue)
+                            .font(Font.samaritanBody(size: 13))
+                            .foregroundColor(Color.isSamaritanMode ? .samaritanRed : .blue)
                             .frame(width: 28, height: 28)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(6)
+                            .background(Color.isSamaritanMode ? Color.samaritanRed.opacity(0.2) : Color.blue.opacity(0.1))
+                            .samaritanCorners(6)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -126,14 +129,15 @@ struct ModularMetricBlock: View {
                 .padding(12)
         }
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: Color.isSamaritanMode ? 0 : 10)
                 .fill(Color.darkCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(colorFor(section).opacity(0.3), lineWidth: 2)
+            RoundedRectangle(cornerRadius: Color.isSamaritanMode ? 0 : 10)
+                .stroke(Color.isSamaritanMode ? Color.samaritanBorder : colorFor(section).opacity(0.3), lineWidth: 2)
         )
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .samaritanPulseGlow(color: .samaritanRed)
         .opacity(draggedItem == section ? 0.5 : 1.0)
         .onDrag {
             if isReorderMode {
@@ -178,14 +182,15 @@ struct ModularMetricBlock: View {
         VStack(spacing: 8) {
             HStack {
                 Text("\(String(format: "%.1f", monitor.cpuUsage))%")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(colorForPercentage(monitor.cpuUsage))
+                    .font(Font.samaritanData(size: 18))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanOrange : colorForPercentage(monitor.cpuUsage))
+                    .samaritanSpacing()
                 Spacer()
 
                 // Mini sparkline graph
                 SparklineView(
                     dataPoints: monitor.cpuHistory,
-                    color: colorForPercentage(monitor.cpuUsage)
+                    color: Color.isSamaritanMode ? .samaritanRed : colorForPercentage(monitor.cpuUsage)
                 )
                 .frame(width: 60, height: 24)
             }
@@ -193,13 +198,15 @@ struct ModularMetricBlock: View {
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 8)
+                        .samaritanCorners(4)
 
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(colorForPercentage(monitor.cpuUsage))
+                    Rectangle()
+                        .fill(Color.isSamaritanMode ? Color.samaritanRed : colorForPercentage(monitor.cpuUsage))
                         .frame(width: geometry.size.width * (monitor.cpuUsage / 100.0), height: 8)
+                        .samaritanCorners(4)
                 }
             }
             .frame(height: 8)
@@ -225,14 +232,15 @@ struct ModularMetricBlock: View {
         VStack(spacing: 8) {
             HStack {
                 Text("\(String(format: "%.1f", monitor.memoryUsage))%")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(colorForPercentage(monitor.memoryUsage))
+                    .font(Font.samaritanData(size: 18))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanOrange : colorForPercentage(monitor.memoryUsage))
+                    .samaritanSpacing()
                 Spacer()
 
                 // Mini sparkline graph
                 SparklineView(
                     dataPoints: monitor.memoryHistory,
-                    color: colorForPercentage(monitor.memoryUsage)
+                    color: Color.isSamaritanMode ? .samaritanRed : colorForPercentage(monitor.memoryUsage)
                 )
                 .frame(width: 60, height: 24)
             }
@@ -240,13 +248,15 @@ struct ModularMetricBlock: View {
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 8)
+                        .samaritanCorners(4)
 
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(colorForPercentage(monitor.memoryUsage))
+                    Rectangle()
+                        .fill(Color.isSamaritanMode ? Color.samaritanRed : colorForPercentage(monitor.memoryUsage))
                         .frame(width: geometry.size.width * (monitor.memoryUsage / 100.0), height: 8)
+                        .samaritanCorners(4)
                 }
             }
             .frame(height: 8)
@@ -324,45 +334,50 @@ struct ModularMetricBlock: View {
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 20)
-                        .cornerRadius(10)
+                        .samaritanCorners(10)
 
                     Rectangle()
                         .fill(
-                            LinearGradient(
-                                colors: [.blue, .cyan],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(colors: [.samaritanRed, .samaritanOrange], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
                         )
                         .frame(width: geometry.size.width * (monitor.diskUsage / 100.0), height: 20)
-                        .cornerRadius(10)
+                        .samaritanCorners(10)
                 }
             }
             .frame(height: 20)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Used")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                    Text(Color.isSamaritanMode ? "USED" : "Used")
+                        .font(Font.samaritanCaption(size: 10))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanTextSecondary : .secondary)
+                        .samaritanSpacing()
                     Text(formatBytes(monitor.diskTotal - monitor.diskFree))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(Font.samaritanData(size: 12))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                        .samaritanSpacing()
                 }
 
                 Spacer()
 
                 Text("\(String(format: "%.1f", monitor.diskUsage))%")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.blue)
+                    .font(Font.samaritanData(size: 20))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanOrange : .blue)
+                    .samaritanSpacing()
 
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Free")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                    Text(Color.isSamaritanMode ? "FREE" : "Free")
+                        .font(Font.samaritanCaption(size: 10))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanTextSecondary : .secondary)
+                        .samaritanSpacing()
                     Text(formatBytes(monitor.diskFree))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(Font.samaritanData(size: 12))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                        .samaritanSpacing()
                 }
             }
         }
@@ -431,42 +446,45 @@ struct ModularMetricBlock: View {
             // Battery percentage display
             HStack {
                 Text("\(monitor.batteryLevel)%")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(batteryColor)
+                    .font(Font.samaritanData(size: 18))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanOrange : batteryColor)
+                    .samaritanSpacing()
                 Spacer()
 
                 // Charging status or time remaining
                 if monitor.isCharging {
                     HStack(spacing: 4) {
                         Image(systemName: "bolt.fill")
-                            .font(.system(size: 12))
-                        Text("Charging")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(Font.samaritanBody(size: 12))
+                        Text(Color.isSamaritanMode ? "CHARGING" : "Charging")
+                            .font(Font.samaritanBody(size: 11))
+                            .samaritanSpacing()
                     }
-                    .foregroundColor(.green)
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanGreen : .green)
                 } else if monitor.batteryTimeRemaining != "N/A" && monitor.batteryTimeRemaining != "Unknown" {
                     Text(monitor.batteryTimeRemaining)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .font(Font.samaritanBody(size: 11))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanTextSecondary : .secondary)
+                        .samaritanSpacing()
                 }
             }
 
             // Battery progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 8)
+                        .samaritanCorners(4)
 
-                    RoundedRectangle(cornerRadius: 4)
+                    Rectangle()
                         .fill(
-                            LinearGradient(
-                                colors: batteryGradient,
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(colors: [.samaritanRed, .samaritanOrange], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: batteryGradient, startPoint: .leading, endPoint: .trailing)
                         )
                         .frame(width: geometry.size.width * (Double(monitor.batteryLevel) / 100.0), height: 8)
+                        .samaritanCorners(4)
                 }
             }
             .frame(height: 8)

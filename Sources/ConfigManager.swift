@@ -35,6 +35,7 @@ struct Config: Codable {
     var theme: String = "system"
     var sectionOrder: [MetricSection] = [.cpu, .memory, .network, .disk, .temperature, .fan, .battery, .privacy]
     var viewMode: ViewMode = .simple
+    var atlasMode: Bool = false
 
     // Metric display modes (graph vs gauge)
     var metricDisplayModes: [String: MetricDisplayMode] = [
@@ -142,6 +143,8 @@ class ConfigManager: ObservableObject {
         if let data = try? JSONEncoder().encode(config) {
             try? data.write(to: configURL)
         }
+        // Also save theme to UserDefaults for ColorExtensions access
+        UserDefaults.standard.set(config.theme, forKey: "PeakView.theme")
     }
 
     func resetToDefaults() {
@@ -156,6 +159,8 @@ class ConfigManager: ObservableObject {
                 newAppearance = NSAppearance(named: .aqua)
             case "dark":
                 newAppearance = NSAppearance(named: .darkAqua)
+            case "samaritan":
+                newAppearance = nil // Respects system appearance for light/dark variant
             default:
                 newAppearance = nil // System default
             }

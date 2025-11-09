@@ -696,37 +696,218 @@ Using ColorExtensions.swift color definitions:
 
 ---
 
-## Future Features (Backlog - From big_update.txt)
+## Phase 9: Theme System Overhaul & Vibrant Colors ✅ COMPLETED
 
-### Planned Enhancements 📋
-- [ ] **Person of Interest TV series, Samaritan-like UI**
-  - Dark and light mode themes with futuristic aesthetic
-  - Consider sleek, high-tech interface design
-  - Potential glassmorphism or neumorphism elements
+### Theme System Improvements (2025-11-06)
+Complete redesign of the theme system with pure black mode and vibrant color palette.
 
-- [ ] **Multi-Device Monitoring**
-  - Local mesh network setup for device-to-device communication
-  - User-based authentication system
-  - Admin (creator) cannot access user data - privacy-first
-  - Potential features:
-    - Monitor multiple Macs on local network
-    - View aggregated system stats
-    - Remote process management
-    - Network topology visualization
-  - Security considerations:
-    - End-to-end encryption
-    - Local-only communication (no cloud)
-    - User-controlled access tokens
-    - Zero-knowledge architecture
+#### Samaritan-Inspired Loading Screen ✅
+- [x] PeakViewLoadingView.swift - Futuristic loading animation
+- [x] 3-second progressive loading animation
+- [x] Monospaced typography with letter spacing
+- [x] Loading messages: "INITIALIZING SYSTEM...", "LOADING CORE MODULES...", etc.
+- [x] Red/orange gradient for dark mode, blue/cyan for light mode
+- [x] Progress bar with glow effect
+- [x] Adaptive theming based on user's selected theme
+- [x] Shown at app launch (3.5 second display time)
 
-### Implementation Notes 📝
-- Multi-device monitoring requires significant architecture changes
-- Mesh network may need Bonjour/mDNS for device discovery
-- Consider using WebSockets or custom TCP protocol
-- Authentication system needs careful security design
-- Privacy-first approach must be maintained throughout
+#### Pure Black Theme Implementation ✅
+- [x] "black af" theme now uses pure #000000 black
+- [x] ColorExtensions.swift updated to detect system vs custom themes
+- [x] System default (window.appearance == nil) uses macOS colors
+- [x] "white af" and "black af" are custom themes
+- [x] Theme detection logic differentiates between all three modes
+- [x] Menu bar icon ALWAYS white regardless of app theme
+
+#### Menu Bar Icon Fixes ✅
+- [x] Removed isTemplate flag for consistent white display
+- [x] PNG icon loading with white tinting via sourceAtop blending
+- [x] Mini graph bars changed from blue/green to white
+- [x] Icon remains white on dark macOS menu bar (system appearance)
+- [x] App theme changes don't affect menu bar icon color
+
+#### Theme Picker UI Redesign ✅
+- [x] Replaced dropdown picker with horizontal button layout
+- [x] ThemeButton component with blue selection indicator
+- [x] Entire button area clickable (contentShape)
+- [x] Theme labels: "🔄 System", "☀️ white af", "⬛ black af"
+- [x] Available in both simple and advanced modes
+- [x] Instant theme application (no action needed)
+
+#### Popover Theme Updates ✅
+- [x] ConfigManager stores weak reference to popover
+- [x] Theme applies directly to popover content view
+- [x] Popover updates immediately when theme changes
+- [x] No need to interact with popover for theme to update
+- [x] PeakViewApp connects popover reference on initialization
+
+#### Vibrant Color System for Black AF Mode ✅
+- [x] New vibrant color variants that pop against pure black
+- [x] isBlackAFMode helper function checks current theme
+- [x] Vibrant colors return neon-like RGB values:
+  - **vibrantCyan**: RGB(0.0, 0.9, 1.0) - Electric cyan
+  - **vibrantBlue**: RGB(0.2, 0.6, 1.0) - Bright blue
+  - **vibrantGreen**: RGB(0.0, 1.0, 0.4) - Neon green
+  - **vibrantMint**: RGB(0.3, 1.0, 0.8) - Bright mint
+  - **vibrantOrange**: RGB(1.0, 0.6, 0.0) - Vivid orange
+  - **vibrantRed**: RGB(1.0, 0.2, 0.3) - Bright red
+  - **vibrantPurple**: RGB(0.8, 0.3, 1.0) - Bright purple
+  - **vibrantPink**: RGB(1.0, 0.3, 0.8) - Hot pink
+  - **vibrantYellow**: RGB(1.0, 0.9, 0.0) - Bright yellow
+- [x] All gradients updated to use vibrant versions
+- [x] Status indicators use vibrant colors (CPU, memory, temperature, battery)
+- [x] Progress bars and metrics use vibrant colors
+- [x] Colors auto-adapt: vibrant in black af, standard in light/system
+
+#### Advanced Mode Filters Restored ✅
+- [x] Filter buttons back in Task Manager advanced mode
+- [x] Filters: All, High CPU, High Memory, My Apps, System
+- [x] Positioned between header and search bar
+- [x] Only visible in advanced mode (clean simple mode)
+- [x] ScrollView for horizontal scrolling if needed
+
+#### Hardware Sensor Monitoring ✅
+- [x] SMCHelper.swift - Direct SMC (System Management Controller) access
+- [x] Real CPU temperature readings via IOKit
+- [x] Real fan speed readings (RPM)
+- [x] Battery temperature monitoring
+- [x] Disk temperature tracking
+- [x] Native hardware sensor integration
+
+#### Files Modified/Created ✅
+1. **ColorExtensions.swift** (51 → 109 lines)
+   - Added isBlackAFMode detection
+   - Added 9 vibrant color variants
+   - Enhanced theme detection logic
+
+2. **ConfigManager.swift**
+   - Added weak popover reference
+   - Updated applyTheme() for selective window targeting
+   - Added direct popover content view theme application
+
+3. **SettingsView.swift**
+   - Replaced dropdown with horizontal button layout
+   - Added ThemeButton component
+   - Made entire button clickable with contentShape
+
+4. **MainWindowView.swift**
+   - Updated all gradients to vibrant versions
+   - Updated status indicator colors
+   - Restored advanced mode filters
+   - Applied vibrant colors to: blue/cyan, green/mint, purple/pink gradients
+
+5. **PeakViewApp.swift**
+   - Added loading screen with app theme
+   - Connected popover reference to ConfigManager
+   - Removed isTemplate from menu bar icons
+   - Added PNG icon white tinting
+   - Mini graph bars changed to white
+
+6. **PeakViewLoadingView.swift** (NEW - 146 lines)
+   - Samaritan-inspired loading screen
+   - Progressive animation with messages
+   - Adaptive theming
+
+7. **SMCHelper.swift** (NEW - ~200 lines)
+   - Direct SMC access for hardware sensors
+   - Temperature and fan speed monitoring
+
+8. **themerules.txt** (NEW)
+   - Theme system documentation
+   - Describes system default, white af, black af themes
+   - Menu bar icon behavior rules
+
+#### Theme Rules Documentation ✅
+- System Default: Follows macOS appearance
+- white af: Custom light theme, menu bar follows system
+- black af: Pure black (#000000) custom theme, menu bar follows system
+- Menu bar icon ALWAYS follows macOS menu bar appearance
+- Theme persists across app launches
+
+### Build Status ✅
+- Last Build: Successful
+- Pure black theme: Working perfectly
+- Vibrant colors: Eye-catching and readable in black af mode
+- Menu bar icon: Always white
+- Popover theme updates: Instant
+- Advanced filters: Restored
 
 ---
 
-*Last Updated: 2025-11-05*
-*Current Focus: Sparkline graphs and unified color scheme completed, planning future enhancements*
+## Future Features (Backlog - From big_update.txt)
+
+### Planned Enhancements 📋
+
+#### Multi-Device Monitoring 📡
+- [ ] Local mesh network setup for device-to-device communication
+- [ ] User-based authentication system
+- [ ] Admin (creator) cannot access user data - privacy-first
+- [ ] Potential features:
+  - Monitor multiple Macs on local network
+  - View aggregated system stats across devices
+  - Remote process management
+  - Network topology visualization
+  - Device health dashboard
+- [ ] Security considerations:
+  - End-to-end encryption
+  - Local-only communication (no cloud)
+  - User-controlled access tokens
+  - Zero-knowledge architecture
+  - Bonjour/mDNS for local device discovery
+
+#### Cross-Platform Ecosystem 🌐
+- [ ] **Windows Version**
+  - Port to Windows with same UI/design language
+  - Use Windows Performance Counters for metrics
+  - Maintain privacy-first architecture
+  - Compatible with mesh network feature
+
+- [ ] **Unix/Linux Version**
+  - Port to Linux distributions
+  - Use /proc filesystem and system calls
+  - Consistent UI across all platforms
+  - Same gradient color schemes
+  - Compatible with mesh network feature
+
+- [ ] **Platform Compatibility**
+  - Unified design language across macOS, Windows, Linux
+  - Consistent feature set
+  - Cross-platform mesh network communication
+  - Shared configuration format
+
+#### ASI (Artificial Superintelligence) Integration 🤖
+- [ ] AI-powered system optimization suggestions
+- [ ] Predictive resource usage analysis
+- [ ] Anomaly detection for unusual process behavior
+- [ ] Automated performance tuning recommendations
+- [ ] Natural language interface for system queries
+- [ ] Privacy-preserving on-device AI processing
+- [ ] Integration considerations:
+  - Local model execution (no cloud APIs)
+  - User-controlled AI features
+  - Transparent AI decision making
+  - Optional feature (can be disabled)
+
+### Implementation Notes 📝
+- **Multi-device monitoring**: Requires significant architecture changes
+  - Mesh network may need Bonjour/mDNS for device discovery
+  - Consider using WebSockets or custom TCP protocol
+  - Authentication system needs careful security design
+  - Privacy-first approach must be maintained throughout
+
+- **Cross-platform**: Major development effort
+  - Separate native implementations for each platform
+  - Consider Qt or Electron for UI consistency
+  - Or: Native Swift UI on Mac, WPF on Windows, GTK on Linux
+  - Maintain consistent design language and color schemes
+
+- **ASI Integration**: Research phase needed
+  - Evaluate on-device ML frameworks (Core ML, TensorFlow Lite)
+  - Define specific use cases and benefits
+  - Ensure user privacy and control
+  - Consider computational overhead
+
+---
+
+*Last Updated: 2025-11-06*
+*Current Focus: Theme system overhaul completed with pure black mode and vibrant colors. Planning cross-platform expansion and AI integration.*

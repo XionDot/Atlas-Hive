@@ -7,8 +7,52 @@ struct MainWindowView: View {
     @ObservedObject var alertManager: AlertManager
     @State private var showSettings: Bool = false
     @State private var showNetworkMonitor: Bool = false
+    @State private var showCommandBar: Bool = false
+    @State private var keyMonitor: Any?
 
     var body: some View {
+        Group {
+            if configManager.config.atlasMode {
+                // Full-screen Atlas Mode
+                AtlasView(
+                    monitor: monitor,
+                    taskManager: taskManager,
+                    configManager: configManager
+                )
+                .onAppear {
+                    enterFullscreen()
+                }
+            } else {
+                // Normal two-column layout
+                normalModeView
+                    .onAppear {
+                        exitFullscreen()
+                    }
+            }
+        }
+    }
+
+    private func enterFullscreen() {
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first(where: { $0.title == "PeakView" }) {
+                if !window.styleMask.contains(.fullScreen) {
+                    window.toggleFullScreen(nil)
+                }
+            }
+        }
+    }
+
+    private func exitFullscreen() {
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first(where: { $0.title == "PeakView" }) {
+                if window.styleMask.contains(.fullScreen) {
+                    window.toggleFullScreen(nil)
+                }
+            }
+        }
+    }
+
+    private var normalModeView: some View {
         ZStack(alignment: .trailing) {
             // Main content - Two column layout
             GeometryReader { geometry in
@@ -68,18 +112,126 @@ struct MainWindowView: View {
                 }
                 .transition(.move(edge: .trailing))
             }
+
+            // Samaritan Command Bar
+            if showCommandBar {
+                SamaritanCommandBar(isShowing: $showCommandBar) { command in
+                    handleCommand(command)
+                }
+                .transition(.opacity)
+                .zIndex(1000)
+            }
+            }
+            .frame(minWidth: 1200, idealWidth: 1200, maxWidth: .infinity, minHeight: 700, idealHeight: 700, maxHeight: .infinity)
+            .samaritanGridOverlay()
+            .samaritanScanlines()
+            .onAppear {
+                // Register keyboard shortcuts
+                keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                    return self.handleKeyPress(event: event)
+                }
+            }
+            .onDisappear {
+                // Remove keyboard monitor when view disappears
+                if let monitor = keyMonitor {
+                    NSEvent.removeMonitor(monitor)
+                    keyMonitor = nil
+                }
+            }
+            .onChange(of: configManager.showSettings) { newValue in
+                // When settings is requested from outside (like popover), open the panel
+                if newValue {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        showSettings = true
+                    }
+                    // Reset the flag
+                    DispatchQueue.main.async {
+                        configManager.showSettings = false
+                    }
+                }
+            }
         }
-        .frame(minWidth: 1200, idealWidth: 1200, maxWidth: .infinity, minHeight: 700, idealHeight: 700, maxHeight: .infinity)
-        .onChange(of: configManager.showSettings) { newValue in
-            // When settings is requested from outside (like popover), open the panel
-            if newValue {
+
+    // MARK: - Keyboard Shortcuts
+    private func handleKeyPress(event: NSEvent) -> NSEvent? {
+        let modifiers = event.modifierFlags
+        let isCmd = modifiers.contains(.command)
+
+        // Cmd+K : Command Bar
+        if isCmd && event.charactersIgnoringModifiers == "k" {
+            withAnimation(.easeOut(duration: 0.2)) {
+                showCommandBar.toggle()
+            }
+            return nil
+        }
+
+        // Cmd+, : Settings
+        if isCmd && event.charactersIgnoringModifiers == "," {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                showSettings.toggle()
+            }
+            return nil
+        }
+
+        // Cmd+N : Network Monitor
+        if isCmd && event.charactersIgnoringModifiers == "n" {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                showNetworkMonitor.toggle()
+            }
+            return nil
+        }
+
+        // Esc : Close panels
+        if event.keyCode == 53 { // Escape key
+            if showCommandBar {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    showCommandBar = false
+                }
+                return nil
+            }
+            if showSettings || showNetworkMonitor {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    showSettings = true
+                    showSettings = false
+                    showNetworkMonitor = false
                 }
-                // Reset the flag
-                DispatchQueue.main.async {
-                    configManager.showSettings = false
-                }
+                return nil
+            }
+        }
+
+        return event
+    }
+
+    // MARK: - Command Handler
+    private func handleCommand(_ command: SamaritanCommand) {
+        switch command.action {
+        case .openSettings:
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                showSettings = true
+            }
+
+        case .openNetworkMonitor:
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                showNetworkMonitor = true
+            }
+
+        case .switchTheme(let themeName):
+            configManager.config.theme = themeName
+            configManager.applyTheme()
+
+        case .toggleViewMode:
+            configManager.config.viewMode = configManager.config.viewMode == .simple ? .advanced : .simple
+
+        case .toggleAtlasMode:
+            configManager.config.atlasMode.toggle()
+
+        case .quitApp:
+            NSApplication.shared.terminate(nil)
+
+        case .viewCPU, .viewMemory, .viewDisk, .viewNetwork, .viewBattery, .viewProcesses, .viewTemperature:
+            // These would scroll to specific sections or focus them
+            // For now, just ensure we're in advanced mode to see all metrics
+            if configManager.config.viewMode == .simple {
+                configManager.config.viewMode = .advanced
             }
         }
     }
@@ -93,19 +245,27 @@ struct NetworkMonitorPanel: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Image(systemName: "network")
-                    .font(.system(size: 20, weight: .semibold))
+                Image(systemName: Color.isSamaritanMode ? "bolt.horizontal" : "network")
+                    .font(Font.samaritanHeader(size: 20))
                     .foregroundStyle(
-                        LinearGradient(
-                            colors: [.vibrantPurple, .vibrantPink],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        Color.isSamaritanMode ?
+                            LinearGradient(
+                                colors: [.samaritanOrange, .samaritanAmber],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ) :
+                            LinearGradient(
+                                colors: [.vibrantPurple, .vibrantPink],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                     )
+                    .samaritanGlow(color: .samaritanOrange)
 
-                Text("Network Monitor")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.primary)
+                Text(Color.isSamaritanMode ? ">>> NETWORK ANALYSIS <<<" : "Network Monitor")
+                    .font(Font.samaritanHeader(size: 22))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                    .samaritanSpacing()
 
                 Spacer()
 
@@ -153,19 +313,27 @@ struct SystemMonitorColumn: View {
             // Header with title and buttons
             HStack {
                 HStack(spacing: 8) {
-                    Image(systemName: "chart.xyaxis.line")
-                        .font(.system(size: 16, weight: .semibold))
+                    Image(systemName: Color.isSamaritanMode ? "terminal" : "chart.xyaxis.line")
+                        .font(Font.samaritanHeader(size: 16))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [.vibrantBlue, .vibrantCyan],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(
+                                    colors: [.samaritanRed, .samaritanOrange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) :
+                                LinearGradient(
+                                    colors: [.vibrantBlue, .vibrantCyan],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                         )
+                        .samaritanGlow(color: .samaritanRed)
 
-                    Text("System Monitor")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.primary)
+                    Text(Color.isSamaritanMode ? ">>> SYSTEM MONITOR <<<" : "System Monitor")
+                        .font(Font.samaritanHeader(size: 17))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                        .samaritanSpacing()
                 }
 
                 Spacer()
@@ -222,15 +390,22 @@ struct SystemMonitorColumn: View {
                     }
                 }) {
                     Image(systemName: showSystemInfo ? "info.circle.fill" : "info.circle")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(Font.samaritanBody(size: 14))
                         .foregroundStyle(
-                            showSystemInfo ?
-                                LinearGradient(colors: [.vibrantGreen, .vibrantMint], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                                LinearGradient(colors: [.secondary], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            Color.isSamaritanMode ?
+                                (showSystemInfo ?
+                                    LinearGradient(colors: [.samaritanRed, .samaritanOrange], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                    LinearGradient(colors: [.samaritanTextSecondary], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                ) :
+                                (showSystemInfo ?
+                                    LinearGradient(colors: [.vibrantGreen, .vibrantMint], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                    LinearGradient(colors: [.secondary], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
                         )
                         .frame(width: 32, height: 32)
-                        .background(showSystemInfo ? Color.green.opacity(0.1) : Color.clear)
-                        .cornerRadius(8)
+                        .background(showSystemInfo ? (Color.isSamaritanMode ? Color.samaritanBorder.opacity(0.2) : Color.green.opacity(0.1)) : Color.clear)
+                        .samaritanCorners(8)
+                        .samaritanGlow(color: .samaritanRed)
                 }
                 .buttonStyle(.plain)
                 .help("System Information")
@@ -242,17 +417,24 @@ struct SystemMonitorColumn: View {
                     }
                 }) {
                     Image(systemName: "network")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(Font.samaritanBody(size: 14))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [.vibrantPurple, .vibrantPink],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(
+                                    colors: [.samaritanOrange, .samaritanAmber],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) :
+                                LinearGradient(
+                                    colors: [.vibrantPurple, .vibrantPink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                         )
                         .frame(width: 32, height: 32)
-                        .background(showNetworkMonitor ? Color.purple.opacity(0.1) : Color.clear)
-                        .cornerRadius(8)
+                        .background(showNetworkMonitor ? (Color.isSamaritanMode ? Color.samaritanBorder.opacity(0.2) : Color.purple.opacity(0.1)) : Color.clear)
+                        .samaritanCorners(8)
+                        .samaritanGlow(color: .samaritanOrange)
                 }
                 .buttonStyle(.plain)
                 .help("Network Monitor")
@@ -580,11 +762,20 @@ struct SystemMonitorColumn: View {
     }
 
     private func colorForPercentage(_ percentage: Double) -> Color {
-        switch percentage {
-        case 0..<40: return .vibrantGreen
-        case 40..<70: return .vibrantYellow
-        case 70..<90: return .vibrantOrange
-        default: return .vibrantRed
+        if Color.isSamaritanMode {
+            switch percentage {
+            case 0..<40: return .samaritanGreen
+            case 40..<70: return .samaritanAmber
+            case 70..<90: return .samaritanOrange
+            default: return .samaritanRed
+            }
+        } else {
+            switch percentage {
+            case 0..<40: return .vibrantGreen
+            case 40..<70: return .vibrantYellow
+            case 70..<90: return .vibrantOrange
+            default: return .vibrantRed
+            }
         }
     }
 
@@ -656,23 +847,41 @@ struct SystemMonitorColumn: View {
     }
 
     private func batteryColor() -> Color {
-        if monitor.isCharging { return .vibrantGreen }
-        if monitor.batteryLevel > 50 { return .vibrantGreen }
-        if monitor.batteryLevel > 20 { return .vibrantYellow }
-        return .vibrantRed
+        if Color.isSamaritanMode {
+            if monitor.isCharging { return .samaritanGreen }
+            if monitor.batteryLevel > 50 { return .samaritanGreen }
+            if monitor.batteryLevel > 20 { return .samaritanAmber }
+            return .samaritanRed
+        } else {
+            if monitor.isCharging { return .vibrantGreen }
+            if monitor.batteryLevel > 50 { return .vibrantGreen }
+            if monitor.batteryLevel > 20 { return .vibrantYellow }
+            return .vibrantRed
+        }
     }
 
     private func temperatureColor(_ temp: String) -> Color {
         // Extract numeric value from temperature string (e.g., "45°C" -> 45)
         let numericString = temp.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-        guard let tempValue = Double(numericString) else { return .vibrantBlue }
+        guard let tempValue = Double(numericString) else {
+            return Color.isSamaritanMode ? .samaritanTextSecondary : .vibrantBlue
+        }
 
         // Color based on temperature (assuming Celsius)
-        switch tempValue {
-        case 0..<50: return .vibrantGreen
-        case 50..<70: return .vibrantYellow
-        case 70..<85: return .vibrantOrange
-        default: return .vibrantRed
+        if Color.isSamaritanMode {
+            switch tempValue {
+            case 0..<50: return .samaritanGreen
+            case 50..<70: return .samaritanAmber
+            case 70..<85: return .samaritanOrange
+            default: return .samaritanRed
+            }
+        } else {
+            switch tempValue {
+            case 0..<50: return .vibrantGreen
+            case 50..<70: return .vibrantYellow
+            case 70..<85: return .vibrantOrange
+            default: return .vibrantRed
+            }
         }
     }
 
@@ -706,19 +915,27 @@ struct TaskManagerColumn: View {
             HStack {
                 // Title
                 HStack(spacing: 8) {
-                    Image(systemName: "list.bullet.rectangle")
-                        .font(.system(size: 16, weight: .semibold))
+                    Image(systemName: Color.isSamaritanMode ? "command" : "list.bullet.rectangle")
+                        .font(Font.samaritanHeader(size: 16))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [.vibrantGreen, .vibrantMint],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(
+                                    colors: [.samaritanRed, .samaritanOrange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) :
+                                LinearGradient(
+                                    colors: [.vibrantGreen, .vibrantMint],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                         )
+                        .samaritanGlow(color: .samaritanRed)
 
-                    Text("Task Manager")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.primary)
+                    Text(Color.isSamaritanMode ? ">>> PROCESS MANAGER <<<" : "Task Manager")
+                        .font(Font.samaritanHeader(size: 17))
+                        .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                        .samaritanSpacing()
                 }
 
                 Spacer()
@@ -728,17 +945,24 @@ struct TaskManagerColumn: View {
                     taskManager.updateProcessList()
                 }) {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(Font.samaritanBody(size: 14))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [.vibrantGreen, .vibrantMint],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.isSamaritanMode ?
+                                LinearGradient(
+                                    colors: [.samaritanRed, .samaritanOrange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ) :
+                                LinearGradient(
+                                    colors: [.vibrantGreen, .vibrantMint],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                         )
                         .frame(width: 32, height: 32)
-                        .background(Color.clear)
-                        .cornerRadius(8)
+                        .background(Color.isSamaritanMode ? Color.samaritanBorder.opacity(0.2) : Color.clear)
+                        .samaritanCorners(8)
+                        .samaritanGlow(color: .samaritanRed)
                 }
                 .buttonStyle(.plain)
                 .help("Refresh Process List")
@@ -1192,15 +1416,27 @@ struct AdvancedProcessRow: View {
     }
 
     private func cpuColor(for usage: Double) -> Color {
-        if usage > 50 { return .vibrantRed }
-        if usage > 25 { return .vibrantOrange }
-        return .vibrantGreen
+        if Color.isSamaritanMode {
+            if usage > 50 { return .samaritanRed }
+            if usage > 25 { return .samaritanOrange }
+            return .samaritanGreen
+        } else {
+            if usage > 50 { return .vibrantRed }
+            if usage > 25 { return .vibrantOrange }
+            return .vibrantGreen
+        }
     }
 
     private func memoryColor(for mb: Double) -> Color {
-        if mb > 500 { return .vibrantRed }
-        if mb > 200 { return .vibrantOrange }
-        return .vibrantGreen
+        if Color.isSamaritanMode {
+            if mb > 500 { return .samaritanRed }
+            if mb > 200 { return .samaritanOrange }
+            return .samaritanGreen
+        } else {
+            if mb > 500 { return .vibrantRed }
+            if mb > 200 { return .vibrantOrange }
+            return .vibrantGreen
+        }
     }
 
     private func formatMemory(_ mb: Double) -> String {
@@ -1256,13 +1492,15 @@ struct MetricDetailRow: View {
 
     var body: some View {
         HStack {
-            Text(label)
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
+            Text(Color.isSamaritanMode ? label.uppercased() : label)
+                .font(Font.samaritanCaption(size: 11))
+                .foregroundColor(Color.isSamaritanMode ? .samaritanTextSecondary : .secondary)
+                .samaritanSpacing()
             Spacer()
             Text(value)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.primary)
+                .font(Font.samaritanBody(size: 11))
+                .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                .samaritanSpacing()
         }
     }
 }
@@ -1429,19 +1667,27 @@ struct SystemInfoPanel: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Image(systemName: "desktopcomputer")
-                    .font(.system(size: 20, weight: .semibold))
+                Image(systemName: Color.isSamaritanMode ? "cpu" : "desktopcomputer")
+                    .font(Font.samaritanHeader(size: 20))
                     .foregroundStyle(
-                        LinearGradient(
-                            colors: [.vibrantGreen, .vibrantMint],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        Color.isSamaritanMode ?
+                            LinearGradient(
+                                colors: [.samaritanRed, .samaritanOrange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ) :
+                            LinearGradient(
+                                colors: [.vibrantGreen, .vibrantMint],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                     )
+                    .samaritanGlow(color: .samaritanRed)
 
-                Text("System Information")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.primary)
+                Text(Color.isSamaritanMode ? ">>> HARDWARE DATA <<<" : "System Information")
+                    .font(Font.samaritanHeader(size: 22))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                    .samaritanSpacing()
 
                 Spacer()
 

@@ -379,43 +379,47 @@ struct StatusCard: View {
         HStack(spacing: 12) {
             // Icon with gradient background
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(color.opacity(0.15))
+                RoundedRectangle(cornerRadius: Color.isSamaritanMode ? 0 : 8)
+                    .fill(Color.isSamaritanMode ? Color.samaritanRed.opacity(0.1) : color.opacity(0.15))
                     .frame(width: 36, height: 36)
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(color)
+                    .font(Font.samaritanBody(size: 18))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanRed : color)
             }
 
             // Title and status
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.primary)
+                Text(Color.isSamaritanMode ? title.uppercased() : title)
+                    .font(Font.samaritanBody(size: 12))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanText : .primary)
+                    .samaritanSpacing()
 
-                Text(status)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.secondary)
+                Text(Color.isSamaritanMode ? status.uppercased() : status)
+                    .font(Font.samaritanCaption(size: 10))
+                    .foregroundColor(Color.isSamaritanMode ? .samaritanTextSecondary : .secondary)
+                    .samaritanSpacing()
             }
 
             Spacer()
 
             // Value
             Text(value)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(color)
+                .font(Font.samaritanData(size: 14))
+                .foregroundColor(Color.isSamaritanMode ? .samaritanOrange : color)
+                .samaritanSpacing()
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: Color.isSamaritanMode ? 0 : 10)
                 .fill(Color.darkCard)
                 .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(color.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: Color.isSamaritanMode ? 0 : 10)
+                .stroke(Color.isSamaritanMode ? Color.samaritanBorder : color.opacity(0.2), lineWidth: Color.isSamaritanMode ? 2 : 1)
         )
+        .samaritanPulseGlow(color: .samaritanRed)
     }
 }
 

@@ -39,6 +39,34 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Atlas Mode Section
+                    SettingsSection(title: "Atlas Mode", icon: "globe") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Enable Atlas Mode", isOn: $configManager.config.atlasMode)
+                                .font(.system(size: 13, weight: .medium))
+
+                            Text("Full-screen Samaritan interface with widget-based layout and command center")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            if configManager.config.atlasMode {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "info.circle.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.samaritanRed)
+                                    Text("Press Cmd+K to access the command palette in Atlas Mode")
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundColor(.samaritanOrange)
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color.samaritanRed.opacity(0.1))
+                                .cornerRadius(6)
+                            }
+                        }
+                    }
+
                     // Menu Bar Section
                     SettingsSection(title: "Menu Bar", icon: "menubar.rectangle") {
                         Toggle("Show Mini Graph", isOn: $configManager.config.showMiniGraphInMenuBar)
@@ -76,20 +104,29 @@ struct SettingsView: View {
                                 Text("Theme")
                                     .font(.system(size: 12))
 
-                                HStack(spacing: 8) {
-                                    ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
-                                        configManager.config.theme = "system"
-                                        configManager.applyTheme()
+                                VStack(spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
+                                            configManager.config.theme = "system"
+                                            configManager.applyTheme()
+                                        }
+
+                                        ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
+                                            configManager.config.theme = "light"
+                                            configManager.applyTheme()
+                                        }
                                     }
 
-                                    ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
-                                        configManager.config.theme = "light"
-                                        configManager.applyTheme()
-                                    }
+                                    HStack(spacing: 8) {
+                                        ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
+                                            configManager.config.theme = "dark"
+                                            configManager.applyTheme()
+                                        }
 
-                                    ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
-                                        configManager.config.theme = "dark"
-                                        configManager.applyTheme()
+                                        ThemeButton(title: "🔴 Samaritan", isSelected: configManager.config.theme == "samaritan") {
+                                            configManager.config.theme = "samaritan"
+                                            configManager.applyTheme()
+                                        }
                                     }
                                 }
                             }
@@ -100,20 +137,29 @@ struct SettingsView: View {
                                 Text("Theme")
                                     .font(.system(size: 12))
 
-                                HStack(spacing: 8) {
-                                    ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
-                                        configManager.config.theme = "system"
-                                        configManager.applyTheme()
+                                VStack(spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        ThemeButton(title: "🔄 System", isSelected: configManager.config.theme == "system") {
+                                            configManager.config.theme = "system"
+                                            configManager.applyTheme()
+                                        }
+
+                                        ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
+                                            configManager.config.theme = "light"
+                                            configManager.applyTheme()
+                                        }
                                     }
 
-                                    ThemeButton(title: "☀️ white af", isSelected: configManager.config.theme == "light") {
-                                        configManager.config.theme = "light"
-                                        configManager.applyTheme()
-                                    }
+                                    HStack(spacing: 8) {
+                                        ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
+                                            configManager.config.theme = "dark"
+                                            configManager.applyTheme()
+                                        }
 
-                                    ThemeButton(title: "⬛ black af", isSelected: configManager.config.theme == "dark") {
-                                        configManager.config.theme = "dark"
-                                        configManager.applyTheme()
+                                        ThemeButton(title: "🔴 Samaritan", isSelected: configManager.config.theme == "samaritan") {
+                                            configManager.config.theme = "samaritan"
+                                            configManager.applyTheme()
+                                        }
                                     }
                                 }
                             }
