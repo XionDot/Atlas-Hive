@@ -1,5 +1,7 @@
 # PeakView Development Progress Tracker
 
+> **⚠️ TODO: REBRAND** - Need to rename app from "PeakView" to something better. Current name and logo are temporary placeholders. Consider alternatives that better reflect the privacy-first, system monitoring mission.
+
 ## Overview
 Building PeakView - a privacy-focused macOS system monitoring app with dual-mode interface (Simple/Advanced) for both System Monitor and Task Manager views.
 
