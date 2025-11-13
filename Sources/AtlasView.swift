@@ -127,15 +127,15 @@ struct AtlasView: View {
                                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                                         .tracking(1)
                                 }
-                                .foregroundColor(.samaritanRed)
+                                .foregroundColor(atlasAccentColor)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
-                                .background(Color.black)
+                                .background(Color.darkBackground)
                                 .overlay(
                                     Rectangle()
-                                        .stroke(Color.samaritanBorder, lineWidth: 2)
+                                        .stroke(atlasAccentColor.opacity(0.5), lineWidth: 2)
                                 )
-                                .shadow(color: Color.samaritanRed.opacity(0.3), radius: 10)
+                                .shadow(color: atlasAccentColor.opacity(0.3), radius: 10)
                             }
                             .buttonStyle(.plain)
                         }
@@ -143,10 +143,10 @@ struct AtlasView: View {
                         Spacer()
                     }
                     .padding(.vertical, 20)
-                    .background(Color.black.opacity(0.8))
+                    .background(Color.darkBackground.opacity(0.8))
                     .overlay(
                         Rectangle()
-                            .fill(Color.samaritanRed.opacity(0.3))
+                            .fill(atlasAccentColor.opacity(0.3))
                             .frame(height: 1),
                         alignment: .bottom
                     )
@@ -436,19 +436,37 @@ struct KeyHintCompact: View {
     let key: String
     let description: String
 
+    private var accentColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var borderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    private var textColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
     var body: some View {
         HStack(spacing: 6) {
             Text(key)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(.samaritanRed)
+                .foregroundColor(accentColor)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.samaritanBorder.opacity(0.2))
+                .background(borderColor.opacity(0.2))
                 .cornerRadius(4)
 
             Text(description)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundColor(.samaritanTextSecondary)
+                .foregroundColor(textColor)
         }
     }
 }
@@ -549,30 +567,30 @@ struct AtlasCommand: Identifiable {
         ),
         AtlasCommand(
             name: "Theme: Samaritan",
-            description: "Switch to Samaritan Theme",
+            description: "Red Terminal Theme",
             icon: "terminal",
-            keywords: ["theme", "samaritan", "red"],
+            keywords: ["theme", "samaritan", "red", "terminal"],
             action: .switchTheme("samaritan")
         ),
         AtlasCommand(
-            name: "Theme: Dark",
-            description: "Switch to Dark Theme",
-            icon: "moon.fill",
-            keywords: ["theme", "dark", "black"],
+            name: "Theme: Black AF",
+            description: "Pure Black Theme",
+            icon: "moon.stars.fill",
+            keywords: ["theme", "black", "dark", "pure", "af"],
             action: .switchTheme("dark")
         ),
         AtlasCommand(
-            name: "Theme: Light",
-            description: "Switch to Light Theme",
+            name: "Theme: White AF",
+            description: "Pure Light Theme",
             icon: "sun.max.fill",
-            keywords: ["theme", "light", "white"],
+            keywords: ["theme", "white", "light", "bright", "af"],
             action: .switchTheme("light")
         ),
         AtlasCommand(
             name: "Theme: System",
-            description: "Use System Theme",
+            description: "Follow System Theme",
             icon: "circle.lefthalf.filled",
-            keywords: ["theme", "system", "auto"],
+            keywords: ["theme", "system", "auto", "default"],
             action: .switchTheme("system")
         ),
         AtlasCommand(
