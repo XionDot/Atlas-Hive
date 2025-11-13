@@ -663,21 +663,28 @@ struct AtlasWidgetView: View {
 
     @ViewBuilder
     private var widgetContent: some View {
-        switch widget.type {
-        case .network:
-            networkContent
-        case .cpu:
-            cpuContent
-        case .memory:
-            memoryContent
-        case .disk:
-            diskContent
-        case .processes:
-            processesContent
-        case .system:
-            systemOverviewContent
-        case .all:
-            allMetricsContent
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    switch widget.type {
+                    case .network:
+                        networkContent
+                    case .cpu:
+                        cpuContent
+                    case .memory:
+                        memoryContent
+                    case .disk:
+                        diskContent
+                    case .processes:
+                        processesContent
+                    case .system:
+                        systemOverviewContent
+                    case .all:
+                        allMetricsContent
+                    }
+                }
+                .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
+            }
         }
     }
 
@@ -713,74 +720,93 @@ struct AtlasWidgetView: View {
                 color: .samaritanAmber
             )
         }
+        .padding(40)
     }
 
     private var cpuContent: some View {
         VStack(spacing: 30) {
+            Spacer()
             // Large CPU percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.cpuUsage))
-                    .font(.system(size: 96, weight: .bold, design: .monospaced))
+                    .font(.system(size: 120, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanRed)
 
                 Text("CPU UTILIZATION")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanTextSecondary)
                     .tracking(2)
             }
 
+            Spacer()
+
             // CPU details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
                 AtlasMetricCard(title: "Cores", value: "\(monitor.cpuCores)", icon: "cpu", color: .samaritanOrange)
                 AtlasMetricCard(title: "Temperature", value: monitor.cpuTemperature, icon: "thermometer.medium", color: .samaritanRed)
                 AtlasMetricCard(title: "Load Average", value: monitor.cpuLoadAverage, icon: "chart.line.uptrend.xyaxis", color: .samaritanAmber)
             }
+
+            Spacer()
         }
+        .padding(40)
     }
 
     private var memoryContent: some View {
         VStack(spacing: 30) {
+            Spacer()
             // Large memory percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.memoryUsage))
-                    .font(.system(size: 96, weight: .bold, design: .monospaced))
+                    .font(.system(size: 120, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanOrange)
 
                 Text("MEMORY USAGE")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanTextSecondary)
                     .tracking(2)
             }
 
+            Spacer()
+
             // Memory details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
                 AtlasMetricCard(title: "Used", value: formatBytes(monitor.memoryUsed), icon: "memorychip.fill", color: .samaritanRed)
                 AtlasMetricCard(title: "Free", value: formatBytes(monitor.memoryFree), icon: "memorychip", color: .samaritanGreen)
                 AtlasMetricCard(title: "Cached", value: formatBytes(monitor.memoryCached), icon: "internaldrive", color: .samaritanAmber)
             }
+
+            Spacer()
         }
+        .padding(40)
     }
 
     private var diskContent: some View {
         VStack(spacing: 30) {
+            Spacer()
             // Large disk percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.diskUsage))
-                    .font(.system(size: 96, weight: .bold, design: .monospaced))
+                    .font(.system(size: 120, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanAmber)
 
                 Text("DISK USAGE")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
                     .foregroundColor(.samaritanTextSecondary)
                     .tracking(2)
             }
 
+            Spacer()
+
             // Disk details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 40) {
                 AtlasMetricCard(title: "Used Space", value: formatBytes(monitor.diskTotal - monitor.diskFree), icon: "internaldrive.fill", color: .samaritanRed)
                 AtlasMetricCard(title: "Free Space", value: formatBytes(monitor.diskFree), icon: "internaldrive", color: .samaritanGreen)
             }
+
+            Spacer()
         }
+        .padding(40)
     }
 
     private var processesContent: some View {
