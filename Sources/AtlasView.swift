@@ -13,7 +13,10 @@ struct AtlasView: View {
 
     // Accent color based on theme
     private var atlasAccentColor: Color {
-        Color.isSamaritanMode ? .samaritanRed : .blue
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
     }
 
     private var atlasTextColor: Color {
@@ -245,7 +248,11 @@ struct AtlasCommandPrompt: View {
 
     // Theme-adaptive colors
     private var accentColor: Color {
-        Color.isSamaritanMode ? .samaritanRed : .blue
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        // Use vibrant colors for black af mode, standard for others
+        return Color.isSystemDark ? .vibrantBlue : .blue
     }
 
     private var textColor: Color {
@@ -364,11 +371,17 @@ struct AtlasCommandRow: View {
 
     // Theme-adaptive colors
     private var accentColor: Color {
-        Color.isSamaritanMode ? .samaritanRed : .blue
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
     }
 
     private var highlightColor: Color {
-        Color.isSamaritanMode ? .samaritanOrange : .cyan
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantCyan : .cyan
     }
 
     private var textColor: Color {
