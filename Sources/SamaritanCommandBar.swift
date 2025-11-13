@@ -10,6 +10,33 @@ struct SamaritanCommandBar: View {
 
     let onCommandSelected: (SamaritanCommand) -> Void
 
+    // Theme-adaptive colors
+    private var accentColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var textColor: Color {
+        Color.isSamaritanMode ? .samaritanText : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
+    private var borderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    private var headerText: String {
+        Color.isSamaritanMode ? "WHAT ARE YOUR COMMANDS?" : "Command Palette"
+    }
+
     var filteredCommands: [SamaritanCommand] {
         if searchText.isEmpty {
             return SamaritanCommand.allCommands
@@ -37,12 +64,12 @@ struct SamaritanCommandBar: View {
                 HStack {
                     Image(systemName: "terminal")
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundColor(.samaritanRed)
+                        .foregroundColor(accentColor)
 
-                    Text("WHAT ARE YOUR COMMANDS?")
+                    Text(headerText)
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(.samaritanText)
-                        .tracking(1.5)
+                        .foregroundColor(textColor)
+                        .tracking(Color.isSamaritanMode ? 1.5 : 1.0)
 
                     Spacer()
 
@@ -53,19 +80,19 @@ struct SamaritanCommandBar: View {
                     }) {
                         Text("ESC")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(.samaritanTextSecondary)
+                            .foregroundColor(secondaryTextColor)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.samaritanBorder.opacity(0.3))
+                            .background(borderColor.opacity(0.3))
                             .cornerRadius(2)
                     }
                     .buttonStyle(.plain)
                 }
                 .padding()
-                .background(Color.black)
+                .background(Color.darkBackground)
                 .overlay(
                     Rectangle()
-                        .fill(Color.samaritanRed)
+                        .fill(accentColor)
                         .frame(height: 2),
                     alignment: .bottom
                 )
@@ -74,11 +101,11 @@ struct SamaritanCommandBar: View {
                 HStack(spacing: 12) {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(.samaritanRed)
+                        .foregroundColor(accentColor)
 
                     TextField("", text: $searchText)
                         .font(.system(size: 16, weight: .medium, design: .monospaced))
-                        .foregroundColor(.samaritanText)
+                        .foregroundColor(textColor)
                         .textFieldStyle(.plain)
                         .focused($isTextFieldFocused)
                         .onSubmit {
@@ -92,7 +119,7 @@ struct SamaritanCommandBar: View {
                 .background(Color.darkCard)
                 .overlay(
                     Rectangle()
-                        .fill(Color.samaritanBorder.opacity(0.3))
+                        .fill(borderColor.opacity(0.3))
                         .frame(height: 1),
                     alignment: .bottom
                 )
@@ -102,10 +129,10 @@ struct SamaritanCommandBar: View {
                     VStack(spacing: 1) {
                         if filteredCommands.isEmpty {
                             HStack {
-                                Text("NO COMMANDS FOUND")
+                                Text(Color.isSamaritanMode ? "NO COMMANDS FOUND" : "No commands found")
                                     .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.samaritanTextSecondary)
-                                    .tracking(1.2)
+                                    .foregroundColor(secondaryTextColor)
+                                    .tracking(Color.isSamaritanMode ? 1.2 : 0)
                                 Spacer()
                             }
                             .padding()
@@ -129,21 +156,23 @@ struct SamaritanCommandBar: View {
 
                 // Footer with hints
                 HStack(spacing: 16) {
-                    KeyHint(key: "↑↓", description: "Navigate")
-                    KeyHint(key: "↵", description: "Execute")
-                    KeyHint(key: "ESC", description: "Close")
+                    KeyHint(key: "↑↓", description: "Navigate", accentColor: accentColor, borderColor: borderColor, textColor: secondaryTextColor)
+                    KeyHint(key: "↵", description: "Execute", accentColor: accentColor, borderColor: borderColor, textColor: secondaryTextColor)
+                    KeyHint(key: "ESC", description: "Close", accentColor: accentColor, borderColor: borderColor, textColor: secondaryTextColor)
                     Spacer()
-                    Text("SAMARITAN v978.0.06.51")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .foregroundColor(.samaritanTextSecondary.opacity(0.6))
-                        .tracking(0.5)
+                    if Color.isSamaritanMode {
+                        Text("SAMARITAN v978.0.06.51")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(secondaryTextColor.opacity(0.6))
+                            .tracking(0.5)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
-                .background(Color.black)
+                .background(Color.darkBackground)
                 .overlay(
                     Rectangle()
-                        .fill(Color.samaritanBorder.opacity(0.3))
+                        .fill(borderColor.opacity(0.3))
                         .frame(height: 1),
                     alignment: .top
                 )
@@ -152,9 +181,9 @@ struct SamaritanCommandBar: View {
             .background(Color.darkBackground)
             .overlay(
                 Rectangle()
-                    .stroke(Color.samaritanBorder, lineWidth: 2)
+                    .stroke(borderColor, lineWidth: 2)
             )
-            .shadow(color: Color.samaritanRed.opacity(0.3), radius: 20)
+            .shadow(color: accentColor.opacity(0.3), radius: 20)
             .onAppear {
                 isTextFieldFocused = true
                 setupKeyMonitor()
@@ -207,36 +236,74 @@ struct CommandRow: View {
     let isSelected: Bool
     let searchText: String
 
+    // Theme-adaptive colors
+    private var accentColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var highlightColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantCyan : .cyan
+    }
+
+    private var textColor: Color {
+        Color.isSamaritanMode ? .samaritanText : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
+    private var borderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    private var commandName: String {
+        Color.isSamaritanMode ? command.name.uppercased() : command.name
+    }
+
+    private var commandDescription: String {
+        Color.isSamaritanMode ? command.description.uppercased() : command.description
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             // Icon
             Image(systemName: command.icon)
                 .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundColor(isSelected ? .samaritanRed : .samaritanOrange)
+                .foregroundColor(isSelected ? accentColor : highlightColor)
                 .frame(width: 24)
 
             // Command name
-            Text(command.name.uppercased())
+            Text(commandName)
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundColor(isSelected ? .samaritanText : .samaritanTextSecondary)
-                .tracking(1.0)
+                .foregroundColor(isSelected ? textColor : secondaryTextColor)
+                .tracking(Color.isSamaritanMode ? 1.0 : 0)
 
             Spacer()
 
             // Description
-            Text(command.description.uppercased())
+            Text(commandDescription)
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundColor(.samaritanTextSecondary.opacity(0.7))
-                .tracking(0.5)
+                .foregroundColor(secondaryTextColor.opacity(0.7))
+                .tracking(Color.isSamaritanMode ? 0.5 : 0)
 
             // Keyboard shortcut if any
             if let shortcut = command.shortcut {
                 Text(shortcut)
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(isSelected ? .samaritanRed : .samaritanTextSecondary)
+                    .foregroundColor(isSelected ? accentColor : secondaryTextColor)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Color.samaritanBorder.opacity(0.2))
+                    .background(borderColor.opacity(0.2))
                     .cornerRadius(2)
             }
         }
@@ -244,11 +311,11 @@ struct CommandRow: View {
         .padding(.vertical, 12)
         .background(
             Rectangle()
-                .fill(isSelected ? Color.samaritanRed.opacity(0.15) : Color.darkCard)
+                .fill(isSelected ? accentColor.opacity(0.15) : Color.darkCard)
         )
         .overlay(
             Rectangle()
-                .fill(isSelected ? Color.samaritanRed : .clear)
+                .fill(isSelected ? accentColor : .clear)
                 .frame(width: 3),
             alignment: .leading
         )
@@ -259,20 +326,23 @@ struct CommandRow: View {
 struct KeyHint: View {
     let key: String
     let description: String
+    let accentColor: Color
+    let borderColor: Color
+    let textColor: Color
 
     var body: some View {
         HStack(spacing: 4) {
             Text(key)
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundColor(.samaritanRed)
+                .foregroundColor(accentColor)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(Color.samaritanBorder.opacity(0.2))
+                .background(borderColor.opacity(0.2))
                 .cornerRadius(2)
 
             Text(description)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
-                .foregroundColor(.samaritanTextSecondary)
+                .foregroundColor(textColor)
         }
     }
 }
