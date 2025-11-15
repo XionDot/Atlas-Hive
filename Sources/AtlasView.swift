@@ -11,7 +11,7 @@ struct AtlasView: View {
     @State private var selectedWidget: AtlasWidget? = nil
     @State private var keyMonitor: Any?
 
-    // Accent color based on theme
+    // Theme-adaptive colors
     private var atlasAccentColor: Color {
         if Color.isSamaritanMode {
             return .samaritanRed
@@ -27,6 +27,63 @@ struct AtlasView: View {
         Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
     }
 
+    private var atlasBorderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    // Metric-specific colors
+    private var cpuColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var memoryColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantOrange : .orange
+    }
+
+    private var diskColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanAmber
+        }
+        return Color.isSystemDark ? .vibrantYellow : .yellow
+    }
+
+    private var networkColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanGreen
+        }
+        return Color.isSystemDark ? .vibrantGreen : .green
+    }
+
+    private var warningColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantOrange : .orange
+    }
+
+    private var criticalColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantRed : .red
+    }
+
+    private var successColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanGreen
+        }
+        return Color.isSystemDark ? .vibrantGreen : .green
+    }
+
     var body: some View {
         ZStack {
             // Background with grid
@@ -34,23 +91,29 @@ struct AtlasView: View {
                 .ignoresSafeArea()
 
             // Grid overlay
-            GeometryReader { geometry in
-                ZStack {
-                    // Vertical lines
-                    ForEach(0..<Int(geometry.size.width / 60), id: \.self) { i in
-                        Rectangle()
-                            .fill(atlasAccentColor.opacity(0.1))
-                            .frame(width: 1)
-                            .offset(x: CGFloat(i) * 60)
-                    }
+            Canvas { context, size in
+                let gridSpacing: CGFloat = 60
 
-                    // Horizontal lines
-                    ForEach(0..<Int(geometry.size.height / 60), id: \.self) { i in
-                        Rectangle()
-                            .fill(atlasAccentColor.opacity(0.1))
-                            .frame(height: 1)
-                            .offset(y: CGFloat(i) * 60)
+                // Draw vertical lines
+                var x: CGFloat = 0
+                while x <= size.width {
+                    let path = Path { path in
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: size.height))
                     }
+                    context.stroke(path, with: .color(atlasAccentColor.opacity(0.1)), lineWidth: 1)
+                    x += gridSpacing
+                }
+
+                // Draw horizontal lines
+                var y: CGFloat = 0
+                while y <= size.height {
+                    let path = Path { path in
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: size.width, y: y))
+                    }
+                    context.stroke(path, with: .color(atlasAccentColor.opacity(0.1)), lineWidth: 1)
+                    y += gridSpacing
                 }
             }
             .allowsHitTesting(false)
@@ -86,7 +149,7 @@ struct AtlasView: View {
                             .tracking(Color.isSamaritanMode ? 4 : 2)
                     }
 
-                    // Command prompt centered
+                    // Command prompt
                     if showCommandBar {
                         AtlasCommandPrompt(isShowing: $showCommandBar) { command in
                             handleCommand(command)
@@ -102,61 +165,59 @@ struct AtlasView: View {
                     .opacity(0.6)
                 }
             } else {
-                // Widget view with top command bar
-                VStack(spacing: 0) {
-                    // Top command bar
-                    HStack {
-                        Spacer()
+                // Widget view (no top bar)
+                ZStack {
+                    // Widget area (no scrolling - everything fits on screen)
+                    if let widget = selectedWidget {
+                        AtlasWidgetView(widget: widget, monitor: monitor, taskManager: taskManager, networkMonitor: networkMonitor)
+                            .padding(30)
+                    }
 
-                        if showCommandBar {
-                            AtlasCommandPrompt(isShowing: $showCommandBar) { command in
-                                handleCommand(command)
-                            }
-                            .frame(width: 500)
-                        } else {
-                            // Collapsed command button
+                    // Minimal icon for mouse access (bottom-right corner)
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
                             Button(action: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                                     showCommandBar = true
                                 }
                             }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "terminal")
-                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                    Text("COMMAND PALETTE")
-                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                        .tracking(1)
-                                }
-                                .foregroundColor(atlasAccentColor)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .background(Color.darkBackground)
-                                .overlay(
-                                    Rectangle()
-                                        .stroke(atlasAccentColor.opacity(0.5), lineWidth: 2)
-                                )
-                                .shadow(color: atlasAccentColor.opacity(0.3), radius: 10)
+                                Image(systemName: "command.circle.fill")
+                                    .font(.system(size: 44, weight: .medium))
+                                    .foregroundColor(atlasAccentColor.opacity(0.7))
+                                    .background(
+                                        Circle()
+                                            .fill(Color.darkBackground.opacity(0.8))
+                                            .frame(width: 50, height: 50)
+                                    )
+                                    .shadow(color: atlasAccentColor.opacity(0.3), radius: 10)
                             }
                             .buttonStyle(.plain)
+                            .padding(30)
                         }
-
-                        Spacer()
                     }
-                    .padding(.vertical, 20)
-                    .background(Color.darkBackground.opacity(0.8))
-                    .overlay(
-                        Rectangle()
-                            .fill(atlasAccentColor.opacity(0.3))
-                            .frame(height: 1),
-                        alignment: .bottom
-                    )
 
-                    // Widget area
-                    ScrollView {
-                        if let widget = selectedWidget {
-                            AtlasWidgetView(widget: widget, monitor: monitor, taskManager: taskManager, networkMonitor: networkMonitor)
-                                .padding(40)
+                    // Blurred overlay command palette
+                    if showCommandBar {
+                        ZStack {
+                            // Blur backdrop
+                            Color.black.opacity(0.7)
+                                .blur(radius: 20)
+                                .ignoresSafeArea()
+                                .onTapGesture {
+                                    withAnimation(.easeOut(duration: 0.2)) {
+                                        showCommandBar = false
+                                    }
+                                }
+
+                            // Command prompt
+                            AtlasCommandPrompt(isShowing: $showCommandBar) { command in
+                                handleCommand(command)
+                            }
+                            .frame(width: 700)
                         }
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
                 }
             }
@@ -619,229 +680,303 @@ struct AtlasWidgetView: View {
     @ObservedObject var taskManager: TaskManager
     @ObservedObject var networkMonitor: NetworkMonitor
 
+    // Theme-adaptive colors
+    private var accentColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var textColor: Color {
+        Color.isSamaritanMode ? .samaritanText : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
+    private var borderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    private var widgetName: String {
+        Color.isSamaritanMode ? widget.name.uppercased() : widget.name
+    }
+
+    private var widgetDescription: String {
+        Color.isSamaritanMode ? widget.description.uppercased() : widget.description
+    }
+
+    // Metric-specific colors
+    private var cpuColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantBlue : .blue
+    }
+
+    private var memoryColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantOrange : .orange
+    }
+
+    private var diskColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanAmber
+        }
+        return Color.isSystemDark ? .vibrantYellow : .yellow
+    }
+
+    private var networkColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanGreen
+        }
+        return Color.isSystemDark ? .vibrantGreen : .green
+    }
+
+    private var warningColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanOrange
+        }
+        return Color.isSystemDark ? .vibrantOrange : .orange
+    }
+
+    private var criticalColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanRed
+        }
+        return Color.isSystemDark ? .vibrantRed : .red
+    }
+
+    private var successColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanGreen
+        }
+        return Color.isSystemDark ? .vibrantGreen : .green
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Widget header
             HStack {
                 Image(systemName: widget.icon)
                     .font(.system(size: 24, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanRed)
+                    .foregroundColor(accentColor)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(widget.name.uppercased())
+                    Text(widgetName)
                         .font(.system(size: 28, weight: .bold, design: .monospaced))
-                        .foregroundColor(.samaritanText)
-                        .tracking(2)
+                        .foregroundColor(textColor)
+                        .tracking(Color.isSamaritanMode ? 2 : 1)
 
-                    Text(widget.description.uppercased())
+                    Text(widgetDescription)
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(.samaritanTextSecondary)
-                        .tracking(1)
+                        .foregroundColor(secondaryTextColor)
+                        .tracking(Color.isSamaritanMode ? 1 : 0.5)
                 }
 
                 Spacer()
             }
             .padding(30)
-            .background(Color.black)
+            .background(Color.darkBackground)
             .overlay(
                 Rectangle()
-                    .fill(Color.samaritanRed)
+                    .fill(accentColor)
                     .frame(height: 3),
                 alignment: .bottom
             )
 
             // Widget content
             widgetContent
-                .padding(30)
         }
-        .background(Color.black.opacity(0.6))
+        .background(Color.darkCard)
         .overlay(
             Rectangle()
-                .stroke(Color.samaritanBorder, lineWidth: 2)
+                .stroke(borderColor, lineWidth: 2)
         )
     }
 
     @ViewBuilder
     private var widgetContent: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 0) {
-                    switch widget.type {
-                    case .network:
-                        networkContent
-                    case .cpu:
-                        cpuContent
-                    case .memory:
-                        memoryContent
-                    case .disk:
-                        diskContent
-                    case .processes:
-                        processesContent
-                    case .system:
-                        systemOverviewContent
-                    case .all:
-                        allMetricsContent
-                    }
-                }
-                .frame(minWidth: geometry.size.width, minHeight: geometry.size.height)
-            }
+        // All content fits on screen - no scrolling needed
+        switch widget.type {
+        case .network:
+            networkContent
+        case .cpu:
+            cpuContent
+        case .memory:
+            memoryContent
+        case .disk:
+            diskContent
+        case .processes:
+            processesContent
+        case .system:
+            systemOverviewContent
+        case .all:
+            allMetricsContent
         }
     }
 
     // MARK: - Widget Content Views
 
     private var networkContent: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
             AtlasMetricCard(
                 title: "Download Speed",
                 value: formatBytes(monitor.networkDownload) + "/s",
                 icon: "arrow.down.circle.fill",
-                color: .samaritanGreen
+                color: networkColor
             )
 
             AtlasMetricCard(
                 title: "Upload Speed",
                 value: formatBytes(monitor.networkUpload) + "/s",
                 icon: "arrow.up.circle.fill",
-                color: .samaritanOrange
+                color: warningColor
             )
 
             AtlasMetricCard(
                 title: "Total Traffic",
                 value: formatBytes(monitor.networkDownload + monitor.networkUpload) + "/s",
                 icon: "arrow.left.arrow.right.circle.fill",
-                color: .samaritanRed
+                color: criticalColor
             )
 
             AtlasMetricCard(
                 title: "Network Status",
                 value: (monitor.networkDownload + monitor.networkUpload) > 1024 ? "ACTIVE" : "IDLE",
                 icon: "wifi.circle.fill",
-                color: .samaritanAmber
+                color: diskColor
             )
         }
-        .padding(40)
+        .padding(30)
     }
 
     private var cpuContent: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 24) {
             Spacer()
             // Large CPU percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.cpuUsage))
                     .font(.system(size: 120, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanRed)
+                    .foregroundColor(cpuColor)
 
-                Text("CPU UTILIZATION")
+                Text(Color.isSamaritanMode ? "CPU UTILIZATION" : "CPU Utilization")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanTextSecondary)
-                    .tracking(2)
+                    .foregroundColor(secondaryTextColor)
+                    .tracking(Color.isSamaritanMode ? 2 : 1)
             }
 
             Spacer()
 
             // CPU details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
-                AtlasMetricCard(title: "Cores", value: "\(monitor.cpuCores)", icon: "cpu", color: .samaritanOrange)
-                AtlasMetricCard(title: "Temperature", value: monitor.cpuTemperature, icon: "thermometer.medium", color: .samaritanRed)
-                AtlasMetricCard(title: "Load Average", value: monitor.cpuLoadAverage, icon: "chart.line.uptrend.xyaxis", color: .samaritanAmber)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
+                AtlasMetricCard(title: "Cores", value: "\(monitor.cpuCores)", icon: "cpu", color: warningColor)
+                AtlasMetricCard(title: "Temperature", value: monitor.cpuTemperature, icon: "thermometer.medium", color: criticalColor)
+                AtlasMetricCard(title: "Load Average", value: monitor.cpuLoadAverage, icon: "chart.line.uptrend.xyaxis", color: diskColor)
             }
 
             Spacer()
         }
-        .padding(40)
+        .padding(30)
     }
 
     private var memoryContent: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 24) {
             Spacer()
             // Large memory percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.memoryUsage))
                     .font(.system(size: 120, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanOrange)
+                    .foregroundColor(memoryColor)
 
-                Text("MEMORY USAGE")
+                Text(Color.isSamaritanMode ? "MEMORY USAGE" : "Memory Usage")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanTextSecondary)
-                    .tracking(2)
+                    .foregroundColor(secondaryTextColor)
+                    .tracking(Color.isSamaritanMode ? 2 : 1)
             }
 
             Spacer()
 
             // Memory details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
-                AtlasMetricCard(title: "Used", value: formatBytes(monitor.memoryUsed), icon: "memorychip.fill", color: .samaritanRed)
-                AtlasMetricCard(title: "Free", value: formatBytes(monitor.memoryFree), icon: "memorychip", color: .samaritanGreen)
-                AtlasMetricCard(title: "Cached", value: formatBytes(monitor.memoryCached), icon: "internaldrive", color: .samaritanAmber)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
+                AtlasMetricCard(title: "Used", value: formatBytes(monitor.memoryUsed), icon: "memorychip.fill", color: criticalColor)
+                AtlasMetricCard(title: "Free", value: formatBytes(monitor.memoryFree), icon: "memorychip", color: successColor)
+                AtlasMetricCard(title: "Cached", value: formatBytes(monitor.memoryCached), icon: "internaldrive", color: diskColor)
             }
 
             Spacer()
         }
-        .padding(40)
+        .padding(30)
     }
 
     private var diskContent: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 24) {
             Spacer()
             // Large disk percentage
             VStack(spacing: 12) {
                 Text(String(format: "%.1f%%", monitor.diskUsage))
                     .font(.system(size: 120, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanAmber)
+                    .foregroundColor(diskColor)
 
-                Text("DISK USAGE")
+                Text(Color.isSamaritanMode ? "DISK USAGE" : "Disk Usage")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanTextSecondary)
-                    .tracking(2)
+                    .foregroundColor(secondaryTextColor)
+                    .tracking(Color.isSamaritanMode ? 2 : 1)
             }
 
             Spacer()
 
             // Disk details grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 40) {
-                AtlasMetricCard(title: "Used Space", value: formatBytes(monitor.diskTotal - monitor.diskFree), icon: "internaldrive.fill", color: .samaritanRed)
-                AtlasMetricCard(title: "Free Space", value: formatBytes(monitor.diskFree), icon: "internaldrive", color: .samaritanGreen)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 32) {
+                AtlasMetricCard(title: "Used Space", value: formatBytes(monitor.diskTotal - monitor.diskFree), icon: "internaldrive.fill", color: criticalColor)
+                AtlasMetricCard(title: "Free Space", value: formatBytes(monitor.diskFree), icon: "internaldrive", color: successColor)
             }
 
             Spacer()
         }
-        .padding(40)
+        .padding(30)
     }
 
     private var processesContent: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("TOP PROCESSES")
+            Text(Color.isSamaritanMode ? "TOP PROCESSES" : "Top Processes")
                 .font(.system(size: 16, weight: .bold, design: .monospaced))
-                .foregroundColor(.samaritanText)
-                .tracking(2)
+                .foregroundColor(textColor)
+                .tracking(Color.isSamaritanMode ? 2 : 1)
 
             VStack(spacing: 2) {
                 ForEach(taskManager.processes.prefix(10)) { process in
                     HStack {
-                        Text(process.name.uppercased())
+                        Text(Color.isSamaritanMode ? process.name.uppercased() : process.name)
                             .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .foregroundColor(.samaritanText)
+                            .foregroundColor(textColor)
                             .lineLimit(1)
 
                         Spacer()
 
                         Text(String(format: "%.1f%%", process.cpuUsage))
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.samaritanOrange)
+                            .foregroundColor(warningColor)
                             .frame(width: 80, alignment: .trailing)
 
                         Text(String(format: "%.0f MB", process.memoryMB))
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(.samaritanRed)
+                            .foregroundColor(criticalColor)
                             .frame(width: 100, alignment: .trailing)
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
-                    .background(Color.black.opacity(0.4))
+                    .background(Color.darkCard)
                     .overlay(
                         Rectangle()
-                            .fill(Color.samaritanBorder.opacity(0.3))
+                            .fill(borderColor.opacity(0.3))
                             .frame(height: 1),
                         alignment: .bottom
                     )
@@ -851,22 +986,285 @@ struct AtlasWidgetView: View {
     }
 
     private var systemOverviewContent: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 30) {
-            AtlasMetricCard(title: "CPU", value: String(format: "%.1f%%", monitor.cpuUsage), icon: "cpu", color: .samaritanRed)
-            AtlasMetricCard(title: "Memory", value: String(format: "%.1f%%", monitor.memoryUsage), icon: "memorychip", color: .samaritanOrange)
-            AtlasMetricCard(title: "Disk", value: String(format: "%.1f%%", monitor.diskUsage), icon: "internaldrive", color: .samaritanAmber)
-            AtlasMetricCard(title: "Download", value: formatBytes(monitor.networkDownload) + "/s", icon: "arrow.down.circle", color: .samaritanGreen)
-            AtlasMetricCard(title: "Upload", value: formatBytes(monitor.networkUpload) + "/s", icon: "arrow.up.circle", color: .samaritanOrange)
-            AtlasMetricCard(title: "Temperature", value: monitor.cpuTemperature, icon: "thermometer.medium", color: .samaritanRed)
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
+            AtlasMetricCard(title: "CPU", value: String(format: "%.1f%%", monitor.cpuUsage), icon: "cpu", color: cpuColor)
+            AtlasMetricCard(title: "Memory", value: String(format: "%.1f%%", monitor.memoryUsage), icon: "memorychip", color: memoryColor)
+            AtlasMetricCard(title: "Disk", value: String(format: "%.1f%%", monitor.diskUsage), icon: "internaldrive", color: diskColor)
+            AtlasMetricCard(title: "Download", value: formatBytes(monitor.networkDownload) + "/s", icon: "arrow.down.circle", color: networkColor)
+            AtlasMetricCard(title: "Upload", value: formatBytes(monitor.networkUpload) + "/s", icon: "arrow.up.circle", color: warningColor)
+            AtlasMetricCard(title: "Temperature", value: monitor.cpuTemperature, icon: "thermometer.medium", color: criticalColor)
         }
+        .padding(30)
     }
 
     private var allMetricsContent: some View {
-        VStack(spacing: 16) {
-            systemMonitorRow
-            networkAndTaskRow
+        VStack(spacing: 12) {
+            // Top row - Gauge metrics (smaller)
+            HStack(spacing: 12) {
+                // CPU Gauge
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .stroke(borderColor.opacity(0.3), lineWidth: 8)
+                            .frame(width: 120, height: 120)
+
+                        Circle()
+                            .trim(from: 0, to: CGFloat(monitor.cpuUsage / 100))
+                            .stroke(cpuColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(.degrees(-90))
+
+                        VStack(spacing: 2) {
+                            Text(String(format: "%.0f%%", monitor.cpuUsage))
+                                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                                .foregroundColor(cpuColor)
+                            Text("CPU")
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundColor(secondaryTextColor)
+                                .tracking(1)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                // Memory Gauge
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .stroke(borderColor.opacity(0.3), lineWidth: 8)
+                            .frame(width: 120, height: 120)
+
+                        Circle()
+                            .trim(from: 0, to: CGFloat(monitor.memoryUsage / 100))
+                            .stroke(memoryColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(.degrees(-90))
+
+                        VStack(spacing: 2) {
+                            Text(String(format: "%.0f%%", monitor.memoryUsage))
+                                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                                .foregroundColor(memoryColor)
+                            Text(Color.isSamaritanMode ? "MEMORY" : "Memory")
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundColor(secondaryTextColor)
+                                .tracking(Color.isSamaritanMode ? 1 : 0.5)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                // Disk Gauge
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .stroke(borderColor.opacity(0.3), lineWidth: 8)
+                            .frame(width: 120, height: 120)
+
+                        Circle()
+                            .trim(from: 0, to: CGFloat(monitor.diskUsage / 100))
+                            .stroke(diskColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(.degrees(-90))
+
+                        VStack(spacing: 2) {
+                            Text(String(format: "%.0f%%", monitor.diskUsage))
+                                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                                .foregroundColor(diskColor)
+                            Text(Color.isSamaritanMode ? "DISK" : "Disk")
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundColor(secondaryTextColor)
+                                .tracking(Color.isSamaritanMode ? 1 : 0.5)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.vertical, 10)
+
+            // CPU Details Row
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: "cpu")
+                        .foregroundColor(cpuColor)
+                    Text(Color.isSamaritanMode ? "CPU METRICS" : "CPU Metrics")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(textColor)
+                        .tracking(Color.isSamaritanMode ? 2 : 1)
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    DetailMetric(label: "Cores", value: "\(monitor.cpuCores)", color: cpuColor)
+                    DetailMetric(label: "Temperature", value: monitor.cpuTemperature, color: criticalColor)
+                    DetailMetric(label: "Load Average", value: monitor.cpuLoadAverage, color: warningColor)
+                    DetailMetric(label: "Processes", value: "\(taskManager.processes.count)", color: diskColor)
+                }
+            }
+            .padding(16)
+            .background(Color.darkCard.opacity(0.5))
+            .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+
+            // Memory Details Row
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: "memorychip")
+                        .foregroundColor(memoryColor)
+                    Text(Color.isSamaritanMode ? "MEMORY METRICS" : "Memory Metrics")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(textColor)
+                        .tracking(Color.isSamaritanMode ? 2 : 1)
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    DetailMetric(label: "Used", value: formatBytes(monitor.memoryUsed), color: criticalColor)
+                    DetailMetric(label: "Free", value: formatBytes(monitor.memoryFree), color: successColor)
+                    DetailMetric(label: "Cached", value: formatBytes(monitor.memoryCached), color: diskColor)
+                    DetailMetric(label: "Wired", value: formatBytes(monitor.memoryWired), color: warningColor)
+                }
+            }
+            .padding(16)
+            .background(Color.darkCard.opacity(0.5))
+            .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+
+            // Network + Disk Row
+            HStack(spacing: 16) {
+                // Network Details
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "network")
+                            .foregroundColor(networkColor)
+                        Text(Color.isSamaritanMode ? "NETWORK" : "Network")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(textColor)
+                            .tracking(Color.isSamaritanMode ? 2 : 1)
+                    }
+
+                    VStack(spacing: 8) {
+                        DetailMetric(label: "Download", value: formatBytes(monitor.networkDownload) + "/s", color: networkColor)
+                        DetailMetric(label: "Upload", value: formatBytes(monitor.networkUpload) + "/s", color: warningColor)
+                        DetailMetric(label: "Connections", value: "\(self.networkMonitor.connections.filter { $0.state == .established }.count)", color: diskColor)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color.darkCard.opacity(0.5))
+                .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+
+                // Disk Details
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "internaldrive")
+                            .foregroundColor(diskColor)
+                        Text(Color.isSamaritanMode ? "STORAGE" : "Storage")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(textColor)
+                            .tracking(Color.isSamaritanMode ? 2 : 1)
+                    }
+
+                    VStack(spacing: 8) {
+                        DetailMetric(label: "Used", value: formatBytes(monitor.diskTotal - monitor.diskFree), color: criticalColor)
+                        DetailMetric(label: "Free", value: formatBytes(monitor.diskFree), color: successColor)
+                        DetailMetric(label: "Total", value: formatBytes(monitor.diskTotal), color: textColor)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color.darkCard.opacity(0.5))
+                .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+            }
+
+            // Bottom Row - Processes and Network Connections
+            HStack(spacing: 16) {
+                // Top Processes
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "app.badge")
+                            .foregroundColor(cpuColor)
+                        Text(Color.isSamaritanMode ? "TOP PROCESSES" : "Top Processes")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(textColor)
+                            .tracking(Color.isSamaritanMode ? 2 : 1)
+                        Spacer()
+                    }
+
+                    VStack(spacing: 2) {
+                        ForEach(taskManager.processes.prefix(6)) { process in
+                            HStack(spacing: 8) {
+                                Text(Color.isSamaritanMode ? process.name.uppercased() : process.name)
+                                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                    .foregroundColor(textColor)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Text(String(format: "%.1f%%", process.cpuUsage))
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .foregroundColor(warningColor)
+                                    .frame(width: 60, alignment: .trailing)
+
+                                Text(String(format: "%.0f MB", process.memoryMB))
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .foregroundColor(criticalColor)
+                                    .frame(width: 80, alignment: .trailing)
+                            }
+                            .padding(.vertical, 5)
+                            .padding(.horizontal, 12)
+                            .background(Color.darkCard.opacity(0.3))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color.darkCard.opacity(0.5))
+                .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+
+                // Active Connections
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "network")
+                            .foregroundColor(networkColor)
+                        Text(Color.isSamaritanMode ? "ACTIVE CONNECTIONS" : "Active Connections")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(textColor)
+                            .tracking(Color.isSamaritanMode ? 2 : 1)
+                        Spacer()
+                    }
+
+                    VStack(spacing: 2) {
+                        ForEach(self.networkMonitor.connections.filter { $0.state == .established }.prefix(6)) { connection in
+                            HStack(spacing: 8) {
+                                Text(Color.isSamaritanMode ? connection.processName.uppercased() : connection.processName)
+                                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                    .foregroundColor(textColor)
+                                    .lineLimit(1)
+                                    .frame(width: 120, alignment: .leading)
+
+                                Text(connection.networkProtocol.rawValue)
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(diskColor)
+                                    .frame(width: 50, alignment: .leading)
+
+                                Text("\(connection.remotePort)")
+                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                    .foregroundColor(secondaryTextColor)
+                                    .frame(width: 50, alignment: .trailing)
+
+                                Text(connection.totalTraffic)
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(networkColor)
+                                    .frame(width: 70, alignment: .trailing)
+                            }
+                            .padding(.vertical, 5)
+                            .padding(.horizontal, 12)
+                            .background(Color.darkCard.opacity(0.3))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color.darkCard.opacity(0.5))
+                .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+            }
         }
-        .padding(24)
+        .padding(20)
     }
 
     private var systemMonitorRow: some View {
@@ -1025,12 +1423,63 @@ struct AtlasWidgetView: View {
     }
 }
 
+// MARK: - Detail Metric Component
+struct DetailMetric: View {
+    let label: String
+    let value: String
+    let color: Color
+
+    private var secondaryTextColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
+    private var labelText: String {
+        Color.isSamaritanMode ? label.uppercased() : label
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(labelText)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundColor(secondaryTextColor)
+                .tracking(Color.isSamaritanMode ? 1 : 0.5)
+
+            Text(value)
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.darkCard.opacity(0.5))
+        .overlay(Rectangle().stroke(color.opacity(0.3), lineWidth: 1))
+    }
+}
+
 // MARK: - Atlas Metric Card
 struct AtlasMetricCard: View {
     let title: String
     let value: String
     let icon: String
     let color: Color
+
+    private var textColor: Color {
+        Color.isSamaritanMode ? .samaritanText : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        Color.isSamaritanMode ? .samaritanTextSecondary : .secondary
+    }
+
+    private var borderColor: Color {
+        if Color.isSamaritanMode {
+            return .samaritanBorder
+        }
+        return Color.isSystemDark ? Color.vibrantBlue.opacity(0.3) : Color.blue.opacity(0.3)
+    }
+
+    private var titleText: String {
+        Color.isSamaritanMode ? title.uppercased() : title
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -1041,20 +1490,20 @@ struct AtlasMetricCard: View {
             VStack(spacing: 8) {
                 Text(value)
                     .font(.system(size: 32, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanText)
+                    .foregroundColor(textColor)
 
-                Text(title.uppercased())
+                Text(titleText)
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(.samaritanTextSecondary)
-                    .tracking(1.5)
+                    .foregroundColor(secondaryTextColor)
+                    .tracking(Color.isSamaritanMode ? 1.5 : 1)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(24)
-        .background(Color.black.opacity(0.6))
+        .background(Color.darkCard)
         .overlay(
             Rectangle()
-                .stroke(Color.samaritanBorder, lineWidth: 2)
+                .stroke(borderColor, lineWidth: 2)
         )
         .shadow(color: color.opacity(0.3), radius: 10)
     }
@@ -1338,5 +1787,30 @@ struct AtlasProcessRow: View {
                 .frame(height: 1),
             alignment: .bottom
         )
+    }
+}
+
+// MARK: - Blinking Cursor Prompt
+struct BlinkingCursorPrompt: View {
+    @State private var showCursor = true
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Type a command...")
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .opacity(0.5)
+            
+            Text("^")
+                .font(.system(size: 48, weight: .bold, design: .monospaced))
+                .opacity(showCursor ? 1.0 : 0.0)
+                .onAppear {
+                    // Start blinking animation
+                    Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { _ in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showCursor.toggle()
+                        }
+                    }
+                }
+        }
     }
 }
