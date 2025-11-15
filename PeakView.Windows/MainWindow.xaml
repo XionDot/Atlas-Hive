@@ -1,0 +1,218 @@
+<Window x:Class="PeakView.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        mc:Ignorable="d"
+        Title="PeakView"
+        Height="700"
+        Width="1200"
+        MinHeight="600"
+        MinWidth="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource DarkBackgroundBrush}"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- System Monitor Section (35%) -->
+            <ColumnDefinition Width="35*"/>
+            <!-- Task Manager Section (65%) -->
+            <ColumnDefinition Width="65*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- System Monitor (Left Panel) -->
+        <Border Grid.Column="0"
+                Padding="16"
+                Background="{StaticResource DarkBackgroundBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <TextBlock Grid.Row="0"
+                          Text="SYSTEM MONITOR"
+                          FontSize="20"
+                          FontWeight="Bold"
+                          FontFamily="Consolas"
+                          Foreground="{StaticResource VibrantBlueBrush}"
+                          Margin="0,0,0,16"/>
+
+                <!-- System Monitor Content -->
+                <ScrollViewer Grid.Row="1"
+                             VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="SystemMonitorPanel">
+                        <!-- CPU Card -->
+                        <Border Style="{StaticResource CardStyle}"
+                               Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="CPU"
+                                         FontSize="12"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="#999999"
+                                         Margin="0,0,0,8"/>
+                                <TextBlock x:Name="CpuUsageText"
+                                         Text="0.0%"
+                                         FontSize="32"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="{StaticResource VibrantBlueBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Memory Card -->
+                        <Border Style="{StaticResource CardStyle}"
+                               Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="MEMORY"
+                                         FontSize="12"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="#999999"
+                                         Margin="0,0,0,8"/>
+                                <TextBlock x:Name="MemoryUsageText"
+                                         Text="0.0%"
+                                         FontSize="32"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="{StaticResource VibrantGreenBrush}"/>
+                                <TextBlock x:Name="MemoryDetailsText"
+                                         Text="0 GB / 0 GB"
+                                         FontSize="11"
+                                         FontFamily="Consolas"
+                                         Foreground="#666666"
+                                         Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Network Card -->
+                        <Border Style="{StaticResource CardStyle}"
+                               Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="NETWORK"
+                                         FontSize="12"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="#999999"
+                                         Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="↓ "
+                                             FontSize="16"
+                                             Foreground="{StaticResource VibrantCyanBrush}"/>
+                                    <TextBlock x:Name="NetworkDownloadText"
+                                             Text="0 KB/s"
+                                             FontSize="16"
+                                             FontFamily="Consolas"
+                                             Foreground="{StaticResource VibrantCyanBrush}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="↑ "
+                                             FontSize="16"
+                                             Foreground="{StaticResource VibrantOrangeBrush}"/>
+                                    <TextBlock x:Name="NetworkUploadText"
+                                             Text="0 KB/s"
+                                             FontSize="16"
+                                             FontFamily="Consolas"
+                                             Foreground="{StaticResource VibrantOrangeBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Disk Card -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="DISK"
+                                         FontSize="12"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="#999999"
+                                         Margin="0,0,0,8"/>
+                                <TextBlock x:Name="DiskUsageText"
+                                         Text="0.0%"
+                                         FontSize="32"
+                                         FontWeight="Bold"
+                                         FontFamily="Consolas"
+                                         Foreground="{StaticResource VibrantYellowBrush}"/>
+                                <TextBlock x:Name="DiskDetailsText"
+                                         Text="0 GB free of 0 GB"
+                                         FontSize="11"
+                                         FontFamily="Consolas"
+                                         Foreground="#666666"
+                                         Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Task Manager (Right Panel) -->
+        <Border Grid.Column="1"
+                Padding="16"
+                Background="{StaticResource DarkBackgroundBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <TextBlock Text="TASK MANAGER"
+                              FontSize="20"
+                              FontWeight="Bold"
+                              FontFamily="Consolas"
+                              Foreground="{StaticResource VibrantGreenBrush}"
+                              HorizontalAlignment="Left"/>
+
+                    <TextBlock x:Name="ProcessCountText"
+                              Text="0 processes"
+                              FontSize="12"
+                              FontFamily="Consolas"
+                              Foreground="#666666"
+                              VerticalAlignment="Bottom"
+                              HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Process List -->
+                <DataGrid x:Name="ProcessDataGrid"
+                         Grid.Row="1"
+                         AutoGenerateColumns="False"
+                         CanUserAddRows="False"
+                         CanUserDeleteRows="False"
+                         IsReadOnly="True"
+                         HeadersVisibility="Column"
+                         GridLinesVisibility="None"
+                         Background="{StaticResource DarkCardBrush}"
+                         RowBackground="{StaticResource DarkCardBrush}"
+                         AlternatingRowBackground="#111111"
+                         BorderBrush="{StaticResource DarkBorderBrush}"
+                         BorderThickness="1"
+                         FontFamily="Consolas"
+                         FontSize="11"
+                         Foreground="#CCCCCC">
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Process Name"
+                                           Binding="{Binding Name}"
+                                           Width="2*"/>
+                        <DataGridTextColumn Header="CPU %"
+                                           Binding="{Binding CpuUsage, StringFormat=N1}"
+                                           Width="*"/>
+                        <DataGridTextColumn Header="Memory (MB)"
+                                           Binding="{Binding MemoryMB, StringFormat=N0}"
+                                           Width="*"/>
+                        <DataGridTextColumn Header="PID"
+                                           Binding="{Binding Pid}"
+                                           Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

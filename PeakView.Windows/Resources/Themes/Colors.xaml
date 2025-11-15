@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Pure Black Theme Colors -->
+    <Color x:Key="DarkBackgroundColor">#000000</Color>
+    <Color x:Key="DarkCardColor">#0D0D0D</Color>
+    <Color x:Key="DarkBorderColor">#1A1A1A</Color>
+
+    <!-- Vibrant Colors (for Pure Black theme) -->
+    <Color x:Key="VibrantCyanColor">#00E6FF</Color>
+    <Color x:Key="VibrantBlueColor">#3399FF</Color>
+    <Color x:Key="VibrantGreenColor">#00FF66</Color>
+    <Color x:Key="VibrantMintColor">#4DFFCC</Color>
+    <Color x:Key="VibrantOrangeColor">#FF9900</Color>
+    <Color x:Key="VibrantRedColor">#FF334D</Color>
+    <Color x:Key="VibrantPurpleColor">#CC4DFF</Color>
+    <Color x:Key="VibrantPinkColor">#FF4DCC</Color>
+    <Color x:Key="VibrantYellowColor">#FFE600</Color>
+
+    <!-- Samaritan Theme Colors -->
+    <Color x:Key="SamaritanRedColor">#FF3333</Color>
+    <Color x:Key="SamaritanOrangeColor">#FF9933</Color>
+    <Color x:Key="SamaritanAmberColor">#FFBF00</Color>
+    <Color x:Key="SamaritanGreenColor">#66FF66</Color>
+    <Color x:Key="SamaritanTextColor">#FFCCCC</Color>
+    <Color x:Key="SamaritanTextSecondaryColor">#CC9999</Color>
+    <Color x:Key="SamaritanBorderColor">#663333</Color>
+
+    <!-- Solid Color Brushes -->
+    <SolidColorBrush x:Key="DarkBackgroundBrush" Color="{StaticResource DarkBackgroundColor}"/>
+    <SolidColorBrush x:Key="DarkCardBrush" Color="{StaticResource DarkCardColor}"/>
+    <SolidColorBrush x:Key="DarkBorderBrush" Color="{StaticResource DarkBorderColor}"/>
+
+    <SolidColorBrush x:Key="VibrantCyanBrush" Color="{StaticResource VibrantCyanColor}"/>
+    <SolidColorBrush x:Key="VibrantBlueBrush" Color="{StaticResource VibrantBlueColor}"/>
+    <SolidColorBrush x:Key="VibrantGreenBrush" Color="{StaticResource VibrantGreenColor}"/>
+    <SolidColorBrush x:Key="VibrantMintBrush" Color="{StaticResource VibrantMintColor}"/>
+    <SolidColorBrush x:Key="VibrantOrangeBrush" Color="{StaticResource VibrantOrangeColor}"/>
+    <SolidColorBrush x:Key="VibrantRedBrush" Color="{StaticResource VibrantRedColor}"/>
+    <SolidColorBrush x:Key="VibrantPurpleBrush" Color="{StaticResource VibrantPurpleColor}"/>
+    <SolidColorBrush x:Key="VibrantPinkBrush" Color="{StaticResource VibrantPinkColor}"/>
+    <SolidColorBrush x:Key="VibrantYellowBrush" Color="{StaticResource VibrantYellowColor}"/>
+
+    <SolidColorBrush x:Key="SamaritanRedBrush" Color="{StaticResource SamaritanRedColor}"/>
+    <SolidColorBrush x:Key="SamaritanOrangeBrush" Color="{StaticResource SamaritanOrangeColor}"/>
+    <SolidColorBrush x:Key="SamaritanAmberBrush" Color="{StaticResource SamaritanAmberColor}"/>
+    <SolidColorBrush x:Key="SamaritanGreenBrush" Color="{StaticResource SamaritanGreenColor}"/>
+    <SolidColorBrush x:Key="SamaritanTextBrush" Color="{StaticResource SamaritanTextColor}"/>
+    <SolidColorBrush x:Key="SamaritanTextSecondaryBrush" Color="{StaticResource SamaritanTextSecondaryColor}"/>
+    <SolidColorBrush x:Key="SamaritanBorderBrush" Color="{StaticResource SamaritanBorderColor}"/>
+
+</ResourceDictionary>
