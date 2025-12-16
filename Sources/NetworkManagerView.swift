@@ -43,6 +43,12 @@ struct NetworkManagerView: View {
                     // Advanced Network Monitoring
                     AdvancedNetworkView(monitor: advancedMonitor)
                         .transition(.opacity)
+                        .onAppear {
+                            advancedMonitor.startAdvancedMonitoring()
+                        }
+                        .onDisappear {
+                            advancedMonitor.stopAdvancedMonitoring()
+                        }
                 } else {
                     // Simple Network Monitoring
                     VStack(spacing: 0) {

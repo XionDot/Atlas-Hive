@@ -410,7 +410,7 @@ class AdvancedNetworkMonitor: ObservableObject {
 
     init() {
         loadDefaultAlertRules()
-        startAdvancedMonitoring()
+        // Don't start monitoring automatically - let the view control it
     }
 
     deinit {
