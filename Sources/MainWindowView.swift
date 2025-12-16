@@ -288,6 +288,7 @@ struct NetworkMonitorPanel: View {
 
             // Network Manager Content
             NetworkManagerView()
+                .environmentObject(configManager)
         }
         .background(
             Color.darkBackground
