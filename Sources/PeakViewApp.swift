@@ -198,6 +198,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Advanced Network Monitor (only show if in advanced mode)
+        if configManager?.config.advancedNetworkMode == true {
+            let networkItem = NSMenuItem(
+                title: "📊 Advanced Network Monitor",
+                action: #selector(showNetworkMonitor),
+                keyEquivalent: "n"
+            )
+            networkItem.target = self
+            menu.addItem(networkItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         // Show Window
         let showWindowItem = NSMenuItem(title: "Show PeakView Window", action: #selector(showMainWindowMenu), keyEquivalent: "")
         showWindowItem.target = self
@@ -235,6 +247,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showMainWindowMenu() {
         showMainWindow()
+    }
+
+    @objc func showNetworkMonitor() {
+        // Show main window and ensure advanced network mode is enabled
+        showMainWindow()
+        // The window should already show the network panel in advanced mode
     }
 
     @objc func toggleFullscreen() {

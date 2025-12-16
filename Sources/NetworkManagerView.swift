@@ -2,6 +2,8 @@ import SwiftUI
 
 struct NetworkManagerView: View {
     @StateObject private var networkMonitor = NetworkMonitor()
+    @StateObject private var advancedMonitor = AdvancedNetworkMonitor()
+    @EnvironmentObject var configManager: ConfigManager
     @State private var searchText: String = ""
     @State private var selectedConnection: NetworkConnection?
     @State private var selectedFilter: ConnectionFilter = .all
@@ -36,22 +38,34 @@ struct NetworkManagerView: View {
                 // Stats Bar with Control Buttons
                 statsBarWithControls
 
-                // Filters and Search
-                filterBar
+                // Show advanced or simple view based on mode
+                if configManager.config.advancedNetworkMode {
+                    // Advanced Network Monitoring
+                    AdvancedNetworkView(monitor: advancedMonitor)
+                        .transition(.opacity)
+                } else {
+                    // Simple Network Monitoring
+                    VStack(spacing: 0) {
+                        // Filters and Search
+                        filterBar
 
-                // Main Content - Connection List (full width)
-                connectionListView
+                        // Main Content - Connection List (full width)
+                        connectionListView
+                    }
+                    .transition(.opacity)
+                }
             }
             .background(Color.darkCard)
 
-            // Connection Details Panel (overlay when selected)
-            if let connection = selectedConnection {
+            // Connection Details Panel (overlay when selected) - only in simple mode
+            if !configManager.config.advancedNetworkMode, let connection = selectedConnection {
                 connectionDetailsView(connection: connection)
                     .frame(width: 400)
                     .shadow(color: .black.opacity(0.3), radius: 10, x: -5, y: 0)
                     .transition(.move(edge: .trailing))
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: configManager.config.advancedNetworkMode)
     }
 
     // MARK: - Control Buttons
@@ -139,8 +153,36 @@ struct NetworkManagerView: View {
             .buttonStyle(.plain)
             .help("Refresh Connection List")
 
-            // Column visibility menu
-            Menu {
+            // Advanced Mode Toggle
+            Button(action: {
+                withAnimation {
+                    configManager.config.advancedNetworkMode.toggle()
+                }
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: configManager.config.advancedNetworkMode ? "chart.xyaxis.line" : "list.bullet")
+                    Text(configManager.config.advancedNetworkMode ? "Advanced" : "Simple")
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    LinearGradient(
+                        colors: configManager.config.advancedNetworkMode ? [.cyan, .blue] : [.gray, .secondary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(6)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(configManager.config.advancedNetworkMode ? "Switch to Simple Mode" : "Switch to Advanced Mode")
+
+            // Column visibility menu (only in simple mode)
+            if !configManager.config.advancedNetworkMode {
+                Menu {
                 Toggle("Process", isOn: $showProcessColumn)
                 Toggle("PID", isOn: $showPIDColumn)
                 Toggle("Protocol", isOn: $showProtoColumn)
@@ -148,16 +190,17 @@ struct NetworkManagerView: View {
                 Toggle("Remote Address", isOn: $showRemoteAddressColumn)
                 Toggle("State", isOn: $showStateColumn)
                 Toggle("Traffic", isOn: $showTrafficColumn)
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .frame(width: 24, height: 24)
-                    .contentShape(Rectangle())
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("Show/Hide Columns")
             }
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .help("Show/Hide Columns")
         }
     }
 

@@ -36,6 +36,7 @@ struct Config: Codable {
     var sectionOrder: [MetricSection] = [.cpu, .memory, .network, .disk, .temperature, .fan, .battery, .privacy]
     var viewMode: ViewMode = .simple
     var atlasMode: Bool = false
+    var advancedNetworkMode: Bool = false
 
     // Metric display modes (graph vs gauge)
     var metricDisplayModes: [String: MetricDisplayMode] = [
