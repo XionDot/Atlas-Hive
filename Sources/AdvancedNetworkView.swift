@@ -89,28 +89,28 @@ struct OverviewTab: View {
 
             // Key Metrics
             HStack(spacing: 16) {
-                MetricCard(
+                NetworkMetricCard(
                     title: "SNMP Devices",
                     value: "\(monitor.snmpDevices.count)",
                     subtitle: "\(monitor.snmpDevices.filter { $0.isReachable }.count) online",
                     color: .vibrantGreen
                 )
 
-                MetricCard(
+                NetworkMetricCard(
                     title: "Active Flows",
                     value: "\(monitor.flows.count)",
                     subtitle: "Network connections",
                     color: .vibrantBlue
                 )
 
-                MetricCard(
+                NetworkMetricCard(
                     title: "Protocols",
                     value: "\(monitor.detectedProtocols.count)",
                     subtitle: "Detected",
                     color: .vibrantOrange
                 )
 
-                MetricCard(
+                NetworkMetricCard(
                     title: "Alerts",
                     value: "\(monitor.alerts.filter { !$0.isAcknowledged }.count)",
                     subtitle: "Unacknowledged",
@@ -271,15 +271,15 @@ struct SNMPTab: View {
 
                     Divider()
 
-                    DetailRow(label: "Hostname", value: device.hostname)
-                    DetailRow(label: "IP Address", value: device.ipAddress)
-                    DetailRow(label: "Type", value: device.deviceType.rawValue)
-                    DetailRow(label: "Description", value: device.sysDescr)
-                    DetailRow(label: "Contact", value: device.sysContact)
-                    DetailRow(label: "Location", value: device.sysLocation)
-                    DetailRow(label: "Uptime", value: formatUptime(device.sysUpTime))
-                    DetailRow(label: "SNMP Version", value: device.version.rawValue)
-                    DetailRow(label: "Status", value: device.isReachable ? "Online" : "Offline")
+                    AdvancedNetworkDetailRow(label: "Hostname", value: device.hostname)
+                    AdvancedNetworkDetailRow(label: "IP Address", value: device.ipAddress)
+                    AdvancedNetworkDetailRow(label: "Type", value: device.deviceType.rawValue)
+                    AdvancedNetworkDetailRow(label: "Description", value: device.sysDescr)
+                    AdvancedNetworkDetailRow(label: "Contact", value: device.sysContact)
+                    AdvancedNetworkDetailRow(label: "Location", value: device.sysLocation)
+                    AdvancedNetworkDetailRow(label: "Uptime", value: formatUptime(device.sysUpTime))
+                    AdvancedNetworkDetailRow(label: "SNMP Version", value: device.version.rawValue)
+                    AdvancedNetworkDetailRow(label: "Status", value: device.isReachable ? "Online" : "Offline")
                 }
                 .padding()
                 .background(Color.gray.opacity(0.1))
@@ -412,8 +412,8 @@ struct ProtocolsTab: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 12) {
-                    ForEach(monitor.detectedProtocols, id: \.id) { protocol_ in
-                        ProtocolCard(protocol: protocol_)
+                    ForEach(monitor.detectedProtocols, id: \.id) { detectedProtocol in
+                        ProtocolCard(detectedProtocol: detectedProtocol)
                     }
                 }
             }
@@ -595,7 +595,7 @@ struct AlertsTab: View {
 
 // MARK: - Supporting Views
 
-struct MetricCard: View {
+struct NetworkMetricCard: View {
     let title: String
     let value: String
     let subtitle: String
@@ -649,7 +649,7 @@ struct DeviceCard: View {
     }
 }
 
-struct DetailRow: View {
+struct AdvancedNetworkDetailRow: View {
     let label: String
     let value: String
 
@@ -682,7 +682,7 @@ struct FlowRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(flow.protocol)
+                Text(flow.protocolType)
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundColor(.vibrantCyan)
                 Text("\(flow.packets) packets")
@@ -697,21 +697,21 @@ struct FlowRow: View {
 }
 
 struct ProtocolCard: View {
-    let protocol: DetectedProtocol
+    let detectedProtocol: DetectedProtocol
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(protocol.name)
+            Text(detectedProtocol.name)
                 .font(.system(size: 14, weight: .semibold, design: .monospaced))
                 .foregroundColor(.vibrantCyan)
-            Text(protocol.category.rawValue)
+            Text(detectedProtocol.category.rawValue)
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundColor(.gray)
             HStack {
-                Text("\(protocol.packets) packets")
+                Text("\(detectedProtocol.packets) packets")
                     .font(.system(size: 10, design: .monospaced))
                 Spacer()
-                Text(formatBytes(protocol.bytes))
+                Text(formatBytes(detectedProtocol.bytes))
                     .font(.system(size: 10, design: .monospaced))
             }
             .foregroundColor(.gray)

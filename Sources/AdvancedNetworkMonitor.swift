@@ -13,7 +13,7 @@ enum SNMPVersion: String, CaseIterable {
 
 /// SNMP Device Model
 struct SNMPDevice: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let ipAddress: String
     let hostname: String
     let community: String // SNMPv1/v2c community string
@@ -30,12 +30,37 @@ struct SNMPDevice: Identifiable, Hashable {
     var interfaces: [SNMPInterface] = []
     var metrics: SNMPMetrics?
 
+    init(ipAddress: String, hostname: String, community: String, version: SNMPVersion,
+         sysDescr: String, sysUpTime: TimeInterval, sysContact: String, sysName: String,
+         sysLocation: String, lastPolled: Date, isReachable: Bool) {
+        self.id = UUID()
+        self.ipAddress = ipAddress
+        self.hostname = hostname
+        self.community = community
+        self.version = version
+        self.sysDescr = sysDescr
+        self.sysUpTime = sysUpTime
+        self.sysContact = sysContact
+        self.sysName = sysName
+        self.sysLocation = sysLocation
+        self.lastPolled = lastPolled
+        self.isReachable = isReachable
+    }
+
+    static func == (lhs: SNMPDevice, rhs: SNMPDevice) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
     // Device type detection
     var deviceType: DeviceType {
         if sysDescr.localizedCaseInsensitiveContains("router") {
             return .router
         } else if sysDescr.localizedCaseInsensitiveContains("switch") {
-            return .switch
+            return .networkSwitch
         } else if sysDescr.localizedCaseInsensitiveContains("firewall") {
             return .firewall
         } else if sysDescr.localizedCaseInsensitiveContains("access point") || sysDescr.localizedCaseInsensitiveContains("ap") {
@@ -49,7 +74,7 @@ struct SNMPDevice: Identifiable, Hashable {
 
     enum DeviceType: String {
         case router = "Router"
-        case switch_ = "Switch"
+        case networkSwitch = "Switch"
         case firewall = "Firewall"
         case accessPoint = "Access Point"
         case printer = "Printer"
@@ -59,7 +84,7 @@ struct SNMPDevice: Identifiable, Hashable {
         var icon: String {
             switch self {
             case .router: return "wifi.router"
-            case .switch_: return "switch.2"
+            case .networkSwitch: return "switch.2"
             case .firewall: return "shield"
             case .accessPoint: return "wifi"
             case .printer: return "printer"
@@ -72,8 +97,37 @@ struct SNMPDevice: Identifiable, Hashable {
 
 /// SNMP Interface Information
 struct SNMPInterface: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let index: Int
+
+    init(index: Int, description: String, type: String, mtu: Int, speed: Int64,
+         macAddress: String, adminStatus: InterfaceStatus, operStatus: InterfaceStatus,
+         inOctets: Int64 = 0, outOctets: Int64 = 0, inErrors: Int64 = 0,
+         outErrors: Int64 = 0, inDiscards: Int64 = 0, outDiscards: Int64 = 0) {
+        self.id = UUID()
+        self.index = index
+        self.description = description
+        self.type = type
+        self.mtu = mtu
+        self.speed = speed
+        self.macAddress = macAddress
+        self.adminStatus = adminStatus
+        self.operStatus = operStatus
+        self.inOctets = inOctets
+        self.outOctets = outOctets
+        self.inErrors = inErrors
+        self.outErrors = outErrors
+        self.inDiscards = inDiscards
+        self.outDiscards = outDiscards
+    }
+
+    static func == (lhs: SNMPInterface, rhs: SNMPInterface) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
     let description: String
     let type: String
     let mtu: Int
@@ -157,7 +211,7 @@ struct NetworkFlow: Identifiable, Hashable, Codable {
     let srcPort: Int
     let dstIP: String
     let dstPort: Int
-    let protocol: String
+    let protocolType: String
     let startTime: Date
     var endTime: Date?
     var packets: Int
@@ -239,7 +293,7 @@ struct TopologyConnection: Identifiable, Hashable {
     let bandwidth: Int64
     let latency: Double
     let packetLoss: Double
-    let protocol: String
+    let protocolType: String
 }
 
 // MARK: - Alert System
