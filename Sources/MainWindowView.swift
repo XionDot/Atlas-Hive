@@ -89,9 +89,12 @@ struct MainWindowView: View {
                     }
                     .transition(.opacity)
 
-                SettingsPanel(configManager: configManager, alertManager: alertManager, isShowing: $showSettings)
-                    .frame(width: 450)
-                    .transition(.move(edge: .trailing))
+                GeometryReader { geo in
+                    SettingsPanel(configManager: configManager, alertManager: alertManager, isShowing: $showSettings)
+                        .frame(width: 450, height: geo.size.height)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .transition(.move(edge: .trailing))
             }
 
             // Network Monitor slide-in panel
@@ -107,6 +110,7 @@ struct MainWindowView: View {
 
                 GeometryReader { geo in
                     NetworkMonitorPanel(isShowing: $showNetworkMonitor)
+                        .environmentObject(configManager)
                         .frame(width: min(1250, geo.size.width * 0.8))
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
@@ -239,6 +243,7 @@ struct MainWindowView: View {
 
 // MARK: - Network Monitor Panel
 struct NetworkMonitorPanel: View {
+    @EnvironmentObject var configManager: ConfigManager
     @Binding var isShowing: Bool
 
     var body: some View {
@@ -1645,12 +1650,9 @@ struct SettingsPanel: View {
 
             Divider()
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    SettingsView(configManager: configManager, alertManager: alertManager)
-                }
+            // SettingsView has its own ScrollView, don't wrap in another
+            SettingsView(configManager: configManager, alertManager: alertManager)
                 .padding()
-            }
         }
         .background(
             VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)

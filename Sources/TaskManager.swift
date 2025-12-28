@@ -34,8 +34,8 @@ class TaskManager: ObservableObject {
     init() {
         updateProcessList()
 
-        // Update every 3 seconds (reduce frequency for better performance)
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+        // Update with power-efficient timer (reduces battery by allowing coalescing)
+        updateTimer = Timer.powerEfficientTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             self?.updateProcessList()
         }
     }

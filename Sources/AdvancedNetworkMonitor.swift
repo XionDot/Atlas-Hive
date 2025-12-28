@@ -419,33 +419,55 @@ class AdvancedNetworkMonitor: ObservableObject {
 
     // MARK: - Monitoring Control
 
-    func startAdvancedMonitoring() {
-        // Start SNMP polling every 30 seconds
-        snmpPollingTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
-            self?.pollSNMPDevices()
-        }
+    func startAdvancedMonitoring(lowPowerMode: Bool = false) {
+        // Ensure timers are created on main thread for UI safety
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
 
-        // Start flow collection every 5 seconds
-        flowCollectionTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            self?.collectNetworkFlows()
-        }
+            // Adjust intervals based on power mode
+            let snmpInterval: TimeInterval = lowPowerMode ? 60.0 : 30.0
+            let flowInterval: TimeInterval = lowPowerMode ? 15.0 : 5.0
+            let dataInterval: TimeInterval = lowPowerMode ? 30.0 : 10.0
+            let alertInterval: TimeInterval = lowPowerMode ? 30.0 : 15.0
 
-        // Start time-series data collection every 10 seconds
-        dataCollectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            self?.collectTimeSeriesData()
-        }
+            // Start SNMP polling with power-efficient timer
+            self.snmpPollingTimer = Timer.powerEfficientTimer(withTimeInterval: snmpInterval, repeats: true) { [weak self] _ in
+                self?.pollSNMPDevices()
+            }
 
-        // Start alert checking every 15 seconds
-        alertCheckTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] _ in
-            self?.checkAlertRules()
+            // Start flow collection with power-efficient timer
+            self.flowCollectionTimer = Timer.powerEfficientTimer(withTimeInterval: flowInterval, repeats: true) { [weak self] _ in
+                self?.collectNetworkFlows()
+            }
+
+            // Start time-series data collection with power-efficient timer
+            self.dataCollectionTimer = Timer.powerEfficientTimer(withTimeInterval: dataInterval, repeats: true) { [weak self] _ in
+                self?.collectTimeSeriesData()
+            }
+
+            // Start alert checking with power-efficient timer
+            self.alertCheckTimer = Timer.powerEfficientTimer(withTimeInterval: alertInterval, repeats: true) { [weak self] _ in
+                self?.checkAlertRules()
+            }
+
+            // Collect initial data point immediately
+            self.collectTimeSeriesData()
         }
     }
 
     func stopAdvancedMonitoring() {
-        snmpPollingTimer?.invalidate()
-        flowCollectionTimer?.invalidate()
-        dataCollectionTimer?.invalidate()
-        alertCheckTimer?.invalidate()
+        // Ensure timers are invalidated on main thread
+        DispatchQueue.main.async { [weak self] in
+            self?.snmpPollingTimer?.invalidate()
+            self?.flowCollectionTimer?.invalidate()
+            self?.dataCollectionTimer?.invalidate()
+            self?.alertCheckTimer?.invalidate()
+
+            self?.snmpPollingTimer = nil
+            self?.flowCollectionTimer = nil
+            self?.dataCollectionTimer = nil
+            self?.alertCheckTimer = nil
+        }
     }
 
     // MARK: - SNMP Device Discovery
@@ -520,9 +542,18 @@ class AdvancedNetworkMonitor: ObservableObject {
 
     private func isHostReachable(_ ip: String) -> Bool {
         // Use ping or NWConnection to check reachability
+        // Note: Process calls can crash - wrap in safety checks
+        guard FileManager.default.fileExists(atPath: "/sbin/ping") else {
+            return false
+        }
+
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/sbin/ping")
         task.arguments = ["-c", "1", "-t", "1", ip]
+
+        // Redirect output to prevent console spam
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = FileHandle.nullDevice
 
         do {
             try task.run()
@@ -534,12 +565,18 @@ class AdvancedNetworkMonitor: ObservableObject {
     }
 
     private func resolveHostname(_ ip: String) -> String {
+        // Safety check for executable
+        guard FileManager.default.fileExists(atPath: "/usr/bin/host") else {
+            return ip
+        }
+
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/host")
         task.arguments = [ip]
 
         let pipe = Pipe()
         task.standardOutput = pipe
+        task.standardError = FileHandle.nullDevice
 
         do {
             try task.run()
@@ -558,16 +595,21 @@ class AdvancedNetworkMonitor: ObservableObject {
     }
 
     private func pollSNMPDevices() {
-        for i in 0..<snmpDevices.count {
+        // Take a snapshot of devices to avoid index issues
+        let devicesToCheck = snmpDevices
+
+        for device in devicesToCheck {
             DispatchQueue.global(qos: .background).async { [weak self] in
                 guard let self = self else { return }
 
-                let device = self.snmpDevices[i]
                 let isReachable = self.isHostReachable(device.ipAddress)
 
                 DispatchQueue.main.async {
-                    self.snmpDevices[i].isReachable = isReachable
-                    self.snmpDevices[i].lastPolled = Date()
+                    // Find the device by ID (safe lookup)
+                    guard let index = self.snmpDevices.firstIndex(where: { $0.id == device.id }) else { return }
+
+                    self.snmpDevices[index].isReachable = isReachable
+                    self.snmpDevices[index].lastPolled = Date()
 
                     // Alert if device went down
                     if !isReachable {
@@ -627,38 +669,56 @@ class AdvancedNetworkMonitor: ObservableObject {
     // MARK: - Time-Series Data Collection
 
     private func collectTimeSeriesData() {
-        // Collect current network metrics
-        let dataPoint = NetworkDataPoint(
-            timestamp: Date(),
-            bytesIn: 0, // Get from network interfaces
-            bytesOut: 0,
-            packetsIn: 0,
-            packetsOut: 0,
-            activeConnections: flows.count,
-            latency: measureLatency(),
-            packetLoss: measurePacketLoss()
-        )
+        // Run on background thread since measureLatency() is blocking
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
 
-        // Add to historical data
-        historicalData.append(dataPoint)
+            let latency = self.measureLatency()
+            let packetLoss = self.measurePacketLoss()
+            let flowCount = self.flows.count
 
-        // Keep only recent data
-        if historicalData.count > maxHistoricalPoints {
-            historicalData.removeFirst(historicalData.count - maxHistoricalPoints)
+            // Create data point
+            let dataPoint = NetworkDataPoint(
+                timestamp: Date(),
+                bytesIn: 0, // Get from network interfaces
+                bytesOut: 0,
+                packetsIn: 0,
+                packetsOut: 0,
+                activeConnections: flowCount,
+                latency: latency,
+                packetLoss: packetLoss
+            )
+
+            // Update on main thread
+            DispatchQueue.main.async {
+                // Add to historical data
+                self.historicalData.append(dataPoint)
+
+                // Keep only recent data
+                if self.historicalData.count > self.maxHistoricalPoints {
+                    self.historicalData.removeFirst(self.historicalData.count - self.maxHistoricalPoints)
+                }
+
+                // Run anomaly detection
+                self.detectAnomalies()
+            }
         }
-
-        // Run anomaly detection
-        detectAnomalies()
     }
 
     private func measureLatency() -> Double {
+        // Safety check for executable
+        guard FileManager.default.fileExists(atPath: "/sbin/ping") else {
+            return 0
+        }
+
         // Ping gateway or external host to measure latency
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/sbin/ping")
-        task.arguments = ["-c", "3", "8.8.8.8"]
+        task.arguments = ["-c", "1", "-t", "2", "8.8.8.8"]  // Single ping with 2s timeout
 
         let pipe = Pipe()
         task.standardOutput = pipe
+        task.standardError = FileHandle.nullDevice
 
         do {
             try task.run()
@@ -666,9 +726,10 @@ class AdvancedNetworkMonitor: ObservableObject {
 
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             if let output = String(data: data, encoding: .utf8) {
-                // Parse avg latency from output
-                if let avgLine = output.components(separatedBy: "\n").last(where: { $0.contains("avg") }),
-                   let avgString = avgLine.components(separatedBy: "/").dropFirst(4).first,
+                // Parse avg latency from output (format: "round-trip min/avg/max/stddev = x/y/z/w ms")
+                if let avgLine = output.components(separatedBy: "\n").last(where: { $0.contains("round-trip") || $0.contains("rtt") }),
+                   let statsSection = avgLine.components(separatedBy: "=").last?.trimmingCharacters(in: .whitespaces),
+                   let avgString = statsSection.components(separatedBy: "/").dropFirst().first,
                    let avg = Double(avgString) {
                     return avg
                 }

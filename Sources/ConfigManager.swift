@@ -38,6 +38,10 @@ struct Config: Codable {
     var atlasMode: Bool = false
     var advancedNetworkMode: Bool = false
 
+    // Power management
+    var lowPowerMode: Bool = false  // Reduces update frequency to save battery
+    var autoLowPowerOnBattery: Bool = true  // Automatically enable low power when on battery
+
     // Metric display modes (graph vs gauge)
     var metricDisplayModes: [String: MetricDisplayMode] = [
         "CPU": .graph,

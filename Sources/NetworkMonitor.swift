@@ -114,7 +114,7 @@ class NetworkMonitor: ObservableObject {
     }
 
     // MARK: - Monitoring Control
-    func startMonitoring() {
+    func startMonitoring(interval: TimeInterval = 2.0) {
         NSLog("[NetworkMonitor] startMonitoring called, isMonitoring=%@", isMonitoring ? "true" : "false")
         guard !isMonitoring else {
             NSLog("[NetworkMonitor] Already monitoring, returning")
@@ -123,8 +123,8 @@ class NetworkMonitor: ObservableObject {
         isMonitoring = true
         NSLog("[NetworkMonitor] Setting up timer...")
 
-        // Update connections every 2 seconds
-        monitorTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // Update connections with power-efficient timer
+        monitorTimer = Timer.powerEfficientTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             NSLog("[NetworkMonitor] Timer fired")
             self?.updateConnections()
             self?.updateStatistics()

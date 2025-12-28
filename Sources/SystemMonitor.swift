@@ -79,6 +79,7 @@ class SystemMonitor: ObservableObject {
 
     private var timer: Timer?
     private var smcHelper: SMCHelper?
+    private var currentInterval: TimeInterval = 2.0
 
     init() {
         // Initialize SMC helper for hardware sensors
@@ -87,14 +88,22 @@ class SystemMonitor: ObservableObject {
         startMonitoring()
     }
 
-    func startMonitoring() {
+    func startMonitoring(interval: TimeInterval = 2.0) {
+        currentInterval = interval
+
         // Initial update
         updateMetrics()
 
-        // Setup timer
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        // Setup power-efficient timer with tolerance for battery coalescing
+        timer = Timer.powerEfficientTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.updateMetrics()
         }
+    }
+
+    func updateInterval(_ newInterval: TimeInterval) {
+        guard newInterval != currentInterval else { return }
+        timer?.invalidate()
+        startMonitoring(interval: newInterval)
     }
 
     func loadSystemInfo() {

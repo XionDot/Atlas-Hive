@@ -58,8 +58,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.target = self
         }
 
-        // Setup monitoring timer
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // Setup power-efficient monitoring timer (allows battery coalescing)
+        Timer.powerEfficientTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.updateMenuBarDisplay()
             self?.checkResourceAlerts()
         }

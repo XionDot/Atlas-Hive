@@ -6,10 +6,9 @@ struct SettingsView: View {
     @ObservedObject var alertManager: AlertManager
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // View Mode Section
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 24) {
+                // View Mode Section
                     SettingsSection(title: "View Mode", icon: "eye") {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Choose your preferred interface style")
@@ -179,7 +178,7 @@ struct SettingsView: View {
                     }
 
                     // Startup Section
-                    SettingsSection(title: "Startup", icon: "power") {
+                    SettingsSection(title: "Startup ⚡", icon: "power") {
                         VStack(alignment: .leading, spacing: 12) {
                             Toggle("Launch at startup", isOn: Binding(
                                 get: { configManager.config.launchAtStartup },
@@ -193,6 +192,44 @@ struct SettingsView: View {
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
+                    }
+
+                    // Power Management Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 10) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.green)
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "bolt.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            Text("Power Management")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.primary)
+                        }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Low power mode", isOn: $configManager.config.lowPowerMode)
+
+                            Text("Reduces update frequency to save battery")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+
+                            Divider()
+
+                            Toggle("Auto low power on battery", isOn: $configManager.config.autoLowPowerOnBattery)
+
+                            Text("Automatically enables low power mode when unplugged")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(NSColor.controlBackgroundColor))
+                        )
                     }
 
                     // Resource Alerts Section
@@ -273,9 +310,8 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .foregroundColor(.red)
                     }
-                }
-                .padding()
             }
+            .padding()
         }
     }
 

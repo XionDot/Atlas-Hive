@@ -799,35 +799,48 @@ struct BandwidthChart: View {
     let data: [NetworkDataPoint]
 
     var body: some View {
-        Chart {
-            ForEach(data.suffix(100), id: \.id) { point in
-                LineMark(
-                    x: .value("Time", point.timestamp),
-                    y: .value("In", Double(point.bytesIn) / 1024 / 1024) // MB
-                )
-                .foregroundStyle(Color.vibrantGreen)
-
-                LineMark(
-                    x: .value("Time", point.timestamp),
-                    y: .value("Out", Double(point.bytesOut) / 1024 / 1024) // MB
-                )
-                .foregroundStyle(Color.vibrantOrange)
-
-                if point.isAnomaly {
-                    PointMark(
+        // Guard against empty data which can cause Chart issues
+        if data.isEmpty {
+            VStack {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 32))
+                    .foregroundColor(.gray)
+                Text("Collecting data...")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(.gray)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            Chart {
+                ForEach(Array(data.suffix(100)), id: \.id) { point in
+                    LineMark(
                         x: .value("Time", point.timestamp),
-                        y: .value("In", Double(point.bytesIn) / 1024 / 1024)
+                        y: .value("In", Double(point.bytesIn) / 1024 / 1024) // MB
                     )
-                    .foregroundStyle(Color.samaritanRed)
-                    .symbolSize(50)
+                    .foregroundStyle(Color.vibrantGreen)
+
+                    LineMark(
+                        x: .value("Time", point.timestamp),
+                        y: .value("Out", Double(point.bytesOut) / 1024 / 1024) // MB
+                    )
+                    .foregroundStyle(Color.vibrantOrange)
+
+                    if point.isAnomaly {
+                        PointMark(
+                            x: .value("Time", point.timestamp),
+                            y: .value("In", Double(point.bytesIn) / 1024 / 1024)
+                        )
+                        .foregroundStyle(Color.samaritanRed)
+                        .symbolSize(50)
+                    }
                 }
             }
-        }
-        .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 6))
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading)
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 6))
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
         }
     }
 }
