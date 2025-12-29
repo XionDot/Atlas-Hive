@@ -655,7 +655,7 @@ struct AtlasCommand: Identifiable {
             action: .switchTheme("system")
         ),
         AtlasCommand(
-            name: "Quit PeakView",
+            name: "Quit Atlas",
             description: "Exit Application",
             icon: "power",
             keywords: ["quit", "exit", "close", "terminate"],

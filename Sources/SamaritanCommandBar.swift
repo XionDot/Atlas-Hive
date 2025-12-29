@@ -504,7 +504,7 @@ struct SamaritanCommand: Identifiable {
 
         // System Commands
         SamaritanCommand(
-            name: "Quit PeakView",
+            name: "Quit Atlas",
             description: "Exit application",
             icon: "power",
             keywords: ["quit", "exit", "close"],

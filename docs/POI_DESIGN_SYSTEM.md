@@ -1,5 +1,5 @@
-# PeakView: POI-Inspired Intelligence Interface
-**Carbon copy of Person of Interest aesthetic with unique PeakView features**
+# Atlas: POI-Inspired Intelligence Interface
+**Carbon copy of Person of Interest aesthetic with unique Atlas features**
 
 ---
 
@@ -467,5 +467,5 @@ struct GlitchEffect: ViewModifier {
 ---
 
 *Design Document Version: 2.0*
-*POI-Inspired with PeakView Uniqueness*
+*POI-Inspired with Atlas Uniqueness*
 *Created: 2025-11-05*

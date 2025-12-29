@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Create DMG for PeakView distribution
+# Create DMG for Atlas distribution
 # Creates a drag-and-drop installer DMG
 
 set -e
 
 VERSION="1.0.0"
-APP_NAME="PeakView"
+APP_NAME="Atlas"
 BUILD_DIR="./build"
 RELEASE_DIR="./releases"
 APP_PATH="$BUILD_DIR/$APP_NAME.app"
@@ -66,7 +66,7 @@ echo ""
 echo "📤 To share with your friend:"
 echo "   1. Send: $RELEASE_DIR/$DMG_NAME"
 echo "   2. They double-click to mount"
-echo "   3. Drag PeakView to Applications"
+echo "   3. Drag Atlas to Applications"
 echo ""
 echo "⚠️  Note: Your friend may need to right-click → Open"
 echo "   on first launch (macOS Gatekeeper)"

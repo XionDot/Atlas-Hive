@@ -1,4 +1,4 @@
-# PeakView: Advanced Intelligence UI Blueprint
+# Atlas: Advanced Intelligence UI Blueprint
 **Inspired by surveillance aesthetics - Completely original design**
 
 ---
@@ -152,7 +152,7 @@ Create a sophisticated, intelligence-focused interface that combines real-time s
 **Purpose**: Monitor multiple Macs on local network
 
 **Architecture**:
-- Bonjour discovery of other PeakView instances
+- Bonjour discovery of other Atlas instances
 - End-to-end encrypted communication
 - Zero-knowledge - no central server
 - Peer-to-peer mesh topology
@@ -387,7 +387,7 @@ struct PredictionResult {
 ### Main Dashboard Layout
 ```
 ┌─────────────────────────────────────────────────────┐
-│ ⚡ PeakView          [Threat: LOW]    [⚙️ ℹ️]       │ ← Title bar (black)
+│ ⚡ Atlas          [Threat: LOW]    [⚙️ ℹ️]       │ ← Title bar (black)
 ├─────────────────────────────────────────────────────┤
 │                                                      │
 │  INTELLIGENCE FEED               LIVE METRICS       │
@@ -457,4 +457,4 @@ Ensure accessibility with 4.5:1 minimum contrast ratio:
 
 *Blueprint Version: 1.0*
 *Created: 2025-11-05*
-*For: PeakView Intelligence System*
+*For: Atlas Intelligence System*

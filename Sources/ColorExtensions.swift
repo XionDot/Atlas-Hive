@@ -8,12 +8,12 @@ extension Color {
     static var isSamaritanMode: Bool {
         // Access ConfigManager to check theme setting
         // We'll use UserDefaults as a bridge since we can't directly access ConfigManager here
-        return UserDefaults.standard.string(forKey: "PeakView.theme") == "samaritan"
+        return UserDefaults.standard.string(forKey: "Atlas.theme") == "samaritan"
     }
 
     /// Check if currently in dark appearance (for Samaritan light/dark variants)
     static var isSystemDark: Bool {
-        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+        if let window = NSApp.windows.first(where: { $0.title == "Atlas" }) {
             let appearance = window.effectiveAppearance
             return appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         }
@@ -30,7 +30,7 @@ extension Color {
         }
 
         // Check app's theme setting
-        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+        if let window = NSApp.windows.first(where: { $0.title == "Atlas" }) {
             // Check if appearance is explicitly set (custom theme) or nil (system default)
             if window.appearance == nil {
                 // System default - use standard macOS colors
@@ -60,7 +60,7 @@ extension Color {
                 Color(red: 0.93, green: 0.91, blue: 0.87)  // Samaritan Light: Darker cream
         }
 
-        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+        if let window = NSApp.windows.first(where: { $0.title == "Atlas" }) {
             // Check if appearance is explicitly set (custom theme) or nil (system default)
             if window.appearance == nil {
                 // System default - use standard macOS colors
@@ -85,7 +85,7 @@ extension Color {
 
     /// Check if currently in black af theme
     private static var isBlackAFMode: Bool {
-        if let window = NSApp.windows.first(where: { $0.title == "PeakView" }) {
+        if let window = NSApp.windows.first(where: { $0.title == "Atlas" }) {
             if window.appearance != nil {
                 let appearance = window.effectiveAppearance
                 return appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua

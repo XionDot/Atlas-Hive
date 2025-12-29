@@ -34,7 +34,7 @@ struct MainWindowView: View {
 
     private func enterFullscreen() {
         DispatchQueue.main.async {
-            if let window = NSApplication.shared.windows.first(where: { $0.title == "PeakView" }) {
+            if let window = NSApplication.shared.windows.first(where: { $0.title == "Atlas" }) {
                 if !window.styleMask.contains(.fullScreen) {
                     window.toggleFullScreen(nil)
                 }
@@ -44,7 +44,7 @@ struct MainWindowView: View {
 
     private func exitFullscreen() {
         DispatchQueue.main.async {
-            if let window = NSApplication.shared.windows.first(where: { $0.title == "PeakView" }) {
+            if let window = NSApplication.shared.windows.first(where: { $0.title == "Atlas" }) {
                 if window.styleMask.contains(.fullScreen) {
                     window.toggleFullScreen(nil)
                 }

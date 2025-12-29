@@ -1,14 +1,20 @@
 #!/bin/bash
 
-echo "Installing PeakView to /Applications..."
+echo "Installing Atlas to /Applications..."
 
-# Kill any running PeakView processes first
-echo "Killing any running PeakView processes..."
-killall -9 PeakView 2>/dev/null || true
+# Kill any running Atlas processes first
+echo "Killing any running Atlas processes..."
+killall -9 Atlas 2>/dev/null || true
 
 # Remove old version if exists
-if [ -d "/Applications/PeakView.app" ]; then
+if [ -d "/Applications/Atlas.app" ]; then
     echo "Removing old version..."
+    rm -rf "/Applications/Atlas.app"
+fi
+
+# Also remove old PeakView version if it exists
+if [ -d "/Applications/PeakView.app" ]; then
+    echo "Removing old PeakView version..."
     rm -rf "/Applications/PeakView.app"
 fi
 
@@ -19,14 +25,14 @@ if [ -d "/Applications/Desktopie.app" ]; then
 fi
 
 # Copy new version
-cp -r ./build/PeakView.app /Applications/
+cp -r ./build/Atlas.app /Applications/
 
 # Remove quarantine attribute to avoid Gatekeeper issues
 echo "Removing quarantine attribute..."
-xattr -cr /Applications/PeakView.app
+xattr -cr /Applications/Atlas.app
 
 echo ""
-echo "✅ PeakView installed successfully!"
+echo "✅ Atlas installed successfully!"
 echo ""
-echo "To launch: open /Applications/PeakView.app"
+echo "To launch: open /Applications/Atlas.app"
 echo "The app will appear in your menu bar."

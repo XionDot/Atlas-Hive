@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct PeakViewApp: App {
+struct AtlasApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -104,7 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let hostingController = NSHostingController(rootView: mainView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "PeakView"
+        window.title = "Atlas"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -211,7 +211,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Show Window
-        let showWindowItem = NSMenuItem(title: "Show PeakView Window", action: #selector(showMainWindowMenu), keyEquivalent: "")
+        let showWindowItem = NSMenuItem(title: "Show Atlas Window", action: #selector(showMainWindowMenu), keyEquivalent: "")
         showWindowItem.target = self
         menu.addItem(showWindowItem)
 
@@ -224,7 +224,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "Quit PeakView", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Atlas", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -464,7 +464,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let configManager = configManager else { return }
 
         // Create loading view with app theme
-        let loadingView = PeakViewLoadingView(
+        let loadingView = AtlasLoadingView(
             isShowing: .constant(true),
             appTheme: configManager.config.theme
         )

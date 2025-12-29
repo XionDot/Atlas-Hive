@@ -1,9 +1,9 @@
-# PeakView Development Progress Tracker
+# Atlas Development Progress Tracker
 
-> **⚠️ TODO: REBRAND** - Need to rename app from "PeakView" to something better. Current name and logo are temporary placeholders. Consider alternatives that better reflect the privacy-first, system monitoring mission.
+> **⚠️ TODO: REBRAND** - Need to rename app from "Atlas" to something better. Current name and logo are temporary placeholders. Consider alternatives that better reflect the privacy-first, system monitoring mission.
 
 ## Overview
-Building PeakView - a privacy-focused macOS system monitoring app with dual-mode interface (Simple/Advanced) for both System Monitor and Task Manager views.
+Building Atlas - a privacy-focused macOS system monitoring app with dual-mode interface (Simple/Advanced) for both System Monitor and Task Manager views.
 
 ## Current Status: Phase 3 - Bug Fixes and Polish
 
@@ -82,7 +82,7 @@ Building PeakView - a privacy-focused macOS system monitoring app with dual-mode
 
 ### Current Issues
 - [ ] **PRIORITY 1**: Menu bar click shows main window instead of popover
-  - Status: Identified in PeakViewApp.swift handleClick method
+  - Status: Identified in AtlasApp.swift handleClick method
   - Fix: Change `showMainWindow()` to `togglePopover()`
   - Need to restore popover functionality for menu bar clicks
 
@@ -201,7 +201,7 @@ Building PeakView - a privacy-focused macOS system monitoring app with dual-mode
 
 ```
 Sources/
-├── PeakViewApp.swift          - App delegate, menu bar, window management
+├── AtlasApp.swift          - App delegate, menu bar, window management
 ├── MainWindowView.swift        - Main two-column layout
 ├── SimplifiedMonitorView.swift - Simple view for popover
 ├── SimplifiedTaskManagerView.swift - Simple task view for popover
@@ -382,8 +382,8 @@ Fixed app crashes related to NSTask/Process usage throughout the codebase.
   - Maintained graceful error handling
 
 ### Build System Improvements ✅
-- [x] Updated install.sh to kill existing PeakView processes
-  - Added `killall -9 PeakView 2>/dev/null || true`
+- [x] Updated install.sh to kill existing Atlas processes
+  - Added `killall -9 Atlas 2>/dev/null || true`
   - Ensures clean install without process conflicts
   - Prevents "app is already running" issues
 
@@ -704,7 +704,7 @@ Using ColorExtensions.swift color definitions:
 Complete redesign of the theme system with pure black mode and vibrant color palette.
 
 #### Samaritan-Inspired Loading Screen ✅
-- [x] PeakViewLoadingView.swift - Futuristic loading animation
+- [x] AtlasLoadingView.swift - Futuristic loading animation
 - [x] 3-second progressive loading animation
 - [x] Monospaced typography with letter spacing
 - [x] Loading messages: "INITIALIZING SYSTEM...", "LOADING CORE MODULES...", etc.
@@ -741,7 +741,7 @@ Complete redesign of the theme system with pure black mode and vibrant color pal
 - [x] Theme applies directly to popover content view
 - [x] Popover updates immediately when theme changes
 - [x] No need to interact with popover for theme to update
-- [x] PeakViewApp connects popover reference on initialization
+- [x] AtlasApp connects popover reference on initialization
 
 #### Vibrant Color System for Black AF Mode ✅
 - [x] New vibrant color variants that pop against pure black
@@ -798,14 +798,14 @@ Complete redesign of the theme system with pure black mode and vibrant color pal
    - Restored advanced mode filters
    - Applied vibrant colors to: blue/cyan, green/mint, purple/pink gradients
 
-5. **PeakViewApp.swift**
+5. **AtlasApp.swift**
    - Added loading screen with app theme
    - Connected popover reference to ConfigManager
    - Removed isTemplate from menu bar icons
    - Added PNG icon white tinting
    - Mini graph bars changed to white
 
-6. **PeakViewLoadingView.swift** (NEW - 146 lines)
+6. **AtlasLoadingView.swift** (NEW - 146 lines)
    - Samaritan-inspired loading screen
    - Progressive animation with messages
    - Adaptive theming

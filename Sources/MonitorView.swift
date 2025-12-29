@@ -22,7 +22,7 @@ struct MonitorView: View {
                         )
                     )
 
-                Text("PeakView")
+                Text("Atlas")
                     .font(.system(size: 13, weight: .bold))
                     .fixedSize()
 
@@ -135,7 +135,7 @@ struct MonitorView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("Quit PeakView")
+                .help("Quit Atlas")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

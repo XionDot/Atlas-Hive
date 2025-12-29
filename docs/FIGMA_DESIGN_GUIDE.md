@@ -1,4 +1,4 @@
-# PeakView - Figma Design Guide for App Store Assets
+# Atlas - Figma Design Guide for App Store Assets
 
 ## Quick Start in Figma
 
@@ -61,7 +61,7 @@ Frame 1: 2880 x 1800px "Hero Shot"
 - Subtext: "Real-time performance metrics in your menu bar"
 
 #### Screenshot 2: Menu Bar Integration
-**Content:** Menu bar with PeakView icon and right-click menu
+**Content:** Menu bar with Atlas icon and right-click menu
 **Overlay Text:**
 - Headline: "Always Accessible"
 - Subtext: "Quick access to privacy controls and task manager"
@@ -160,15 +160,15 @@ Text Secondary: #8E8E93
 ## Quick Figma Workflow
 
 1. **Set up frames** for all required sizes
-2. **Import screenshots** of PeakView (use actual app screenshots)
+2. **Import screenshots** of Atlas (use actual app screenshots)
 3. **Add device mockups** from Figma Community
 4. **Create background** (gradient or image)
 5. **Add text overlays** with clear value propositions
 6. **Export all assets**
 
-## Where to Get PeakView Screenshots
+## Where to Get Atlas Screenshots
 
-Run PeakView and capture these views:
+Run Atlas and capture these views:
 1. Main popover (left-click menu bar icon)
 2. Right-click privacy menu
 3. Advanced mode with all metrics
@@ -237,12 +237,12 @@ professional software design, wide screen format"
 ## Example File Naming
 
 ```
-peakview-app-icon.png
-peakview-screenshot-1-hero.png
-peakview-screenshot-2-menubar.png
-peakview-screenshot-3-modes.png
-peakview-screenshot-4-taskmanager.png
-peakview-screenshot-5-privacy.png
+atlas-app-icon.png
+atlas-screenshot-1-hero.png
+atlas-screenshot-2-menubar.png
+atlas-screenshot-3-modes.png
+atlas-screenshot-4-taskmanager.png
+atlas-screenshot-5-privacy.png
 ```
 
 ---

@@ -83,7 +83,7 @@ class ConfigManager: ObservableObject {
     init() {
         // Get config file path
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let appFolder = appSupport.appendingPathComponent("PeakView", isDirectory: true)
+        let appFolder = appSupport.appendingPathComponent("Atlas", isDirectory: true)
 
         // Create directory if it doesn't exist
         try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
@@ -149,7 +149,7 @@ class ConfigManager: ObservableObject {
             try? data.write(to: configURL)
         }
         // Also save theme to UserDefaults for ColorExtensions access
-        UserDefaults.standard.set(config.theme, forKey: "PeakView.theme")
+        UserDefaults.standard.set(config.theme, forKey: "Atlas.theme")
     }
 
     func resetToDefaults() {
@@ -178,7 +178,7 @@ class ConfigManager: ObservableObject {
                 // Only apply theme to windows with titles or content view controllers
                 // Skip system windows (status bar, etc)
                 // Include popover windows (.class == NSPopover)
-                if window.title == "PeakView" ||
+                if window.title == "Atlas" ||
                    (window.contentViewController != nil && window.styleMask.contains(.titled)) ||
                    window.styleMask.contains(.borderless) ||
                    String(describing: type(of: window)).contains("Popover") {

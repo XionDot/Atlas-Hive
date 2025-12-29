@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-struct PeakViewLoadingView: View {
+struct AtlasLoadingView: View {
     @State private var progress: Double = 0.0
     @State private var currentMessageIndex: Int = 0
     @State private var isComplete: Bool = false
@@ -58,9 +58,9 @@ struct PeakViewLoadingView: View {
             VStack(spacing: 60) {
                 Spacer()
 
-                // PeakView branding
+                // Atlas branding
                 VStack(spacing: 12) {
-                    Text("PEAKVIEW")
+                    Text("ATLAS")
                         .font(.system(size: 64, weight: .black, design: .monospaced))
                         .foregroundColor(primaryTextColor)
                         .tracking(12)
@@ -130,7 +130,7 @@ struct PeakViewLoadingView: View {
 
                 // Version info
                 VStack(spacing: 6) {
-                    Text("PEAKVIEW v2.0")
+                    Text("ATLAS v2.0")
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
                         .foregroundColor(primaryTextColor.opacity(0.4))
                         .tracking(2)

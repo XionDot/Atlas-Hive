@@ -1,6 +1,6 @@
 # Advanced Network Monitoring
 
-PeakView's Advanced Network Monitoring provides enterprise-grade network visibility with SNMP support, deep packet inspection, AI-ready analytics, and real-time alerting.
+Atlas's Advanced Network Monitoring provides enterprise-grade network visibility with SNMP support, deep packet inspection, AI-ready analytics, and real-time alerting.
 
 ## Features Overview
 
@@ -431,7 +431,7 @@ print(f"ML detected: {(df['ml_anomaly'] == -1).sum()} anomalies")
 
 ## License
 
-Part of PeakView - Privacy-first system monitoring for macOS.
+Part of Atlas - Privacy-first system monitoring for macOS.
 
 ---
 

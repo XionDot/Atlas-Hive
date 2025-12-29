@@ -188,7 +188,7 @@ struct SettingsView: View {
                                 }
                             ))
 
-                            Text("PeakView will automatically start when you log in")
+                            Text("Atlas will automatically start when you log in")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                         }
@@ -346,7 +346,7 @@ struct SettingsView: View {
                 // Remove from login items using AppleScript
                 let script = """
                 tell application "System Events"
-                    delete login item "PeakView"
+                    delete login item "Atlas"
                 end tell
                 """
                 var error: NSDictionary?

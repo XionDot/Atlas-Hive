@@ -1,16 +1,16 @@
-# PeakView - Network Monitor Update
+# Atlas - Network Monitor Update
 
 ## Major Update: Network Monitoring & Privacy-First Architecture
 
 ### Overview
-This update introduces a comprehensive network monitoring tool to PeakView, built with **privacy and security as the top priority**. The network monitor provides Wireshark-like functionality while maintaining complete user privacy and data security.
+This update introduces a comprehensive network monitoring tool to Atlas, built with **privacy and security as the top priority**. The network monitor provides Wireshark-like functionality while maintaining complete user privacy and data security.
 
 ---
 
 ## 🆕 New Features
 
 ### 1. Network Monitor Tab
-A complete network traffic monitoring solution integrated into PeakView's main window.
+A complete network traffic monitoring solution integrated into Atlas's main window.
 
 #### Features:
 - **Real-time Connection Tracking**: Monitor all active TCP and UDP connections
@@ -144,7 +144,7 @@ NetworkManagerView (UI Layer)
     ↓
 MainWindowView (Tab Container)
     ↓
-PeakViewApp (Window Management)
+AtlasApp (Window Management)
 ```
 
 ---
@@ -221,7 +221,7 @@ PeakViewApp (Window Management)
 ## 📝 Usage Guide
 
 ### Getting Started:
-1. Launch PeakView
+1. Launch Atlas
 2. Click the **Network** tab in the main window
 3. Click **Start** to begin monitoring
 4. Watch real-time connections appear in the table
@@ -310,7 +310,7 @@ PeakViewApp (Window Management)
 
 ## 🎯 Privacy Commitment
 
-**PeakView's Network Monitor is designed to be UNHACKABLE in the sense that:**
+**Atlas's Network Monitor is designed to be UNHACKABLE in the sense that:**
 
 1. **No Attack Surface**: We don't collect data, so there's nothing to hack
 2. **No Backend**: 100% local operation means no server vulnerabilities

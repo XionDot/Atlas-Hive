@@ -83,7 +83,7 @@ struct SimplifiedMonitorView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("Quit PeakView")
+                .help("Quit Atlas")
             }
             .padding(.bottom, 12)
 

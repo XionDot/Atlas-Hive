@@ -1,6 +1,6 @@
 # Cross-Platform Development Roadmap
 
-> **Mission**: Bring PeakView's privacy-first system monitoring to Windows and Linux while maintaining a unified design language and feature set across all platforms.
+> **Mission**: Bring Atlas's privacy-first system monitoring to Windows and Linux while maintaining a unified design language and feature set across all platforms.
 
 ---
 
@@ -139,8 +139,8 @@
 
 #### Windows File Structure (Proposed)
 ```
-PeakView.Windows/
-├── PeakView.csproj
+Atlas.Windows/
+├── Atlas.csproj
 ├── App.xaml
 ├── App.xaml.cs
 ├── MainWindow.xaml
@@ -246,8 +246,8 @@ PeakView.Windows/
 
 #### Linux File Structure (Proposed)
 ```
-peakview-linux/
-├── peakview/
+atlas-linux/
+├── atlas/
 │   ├── __init__.py
 │   ├── main.py
 │   ├── core/

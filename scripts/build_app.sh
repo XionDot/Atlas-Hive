@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Build the Swift package in release mode
-echo "Building PeakView in release mode..."
+echo "Building Atlas in release mode..."
 swift build -c release
 
 # Create app bundle structure
 echo "Creating app bundle structure..."
-APP_NAME="PeakView.app"
+APP_NAME="Atlas.app"
 APP_DIR="./build/$APP_NAME"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
@@ -19,7 +19,7 @@ mkdir -p "$RESOURCES_DIR"
 
 # Copy executable
 echo "Copying executable..."
-cp .build/release/PeakView "$MACOS_DIR/"
+cp .build/release/Atlas "$MACOS_DIR/"
 
 # Copy Info.plist
 echo "Copying Info.plist..."
@@ -56,7 +56,7 @@ echo "Signing app with Developer ID..."
 codesign --force --sign "Developer ID Application: Ahmed Zitoun (3FPQAZ9VK8)" \
     --timestamp \
     --options runtime \
-    --entitlements PeakView.entitlements \
+    --entitlements Atlas.entitlements \
     "$APP_DIR"
 
 # Verify signature
