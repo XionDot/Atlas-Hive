@@ -1,78 +1,59 @@
-# 🟠 Pulse: System Monitor & Privacy Shield
+# 🟠 Atlas Hive
 
 <p align="center">
-  <img src="https://via.placeholder.com/150/000000/FFA500?text=P" alt="Pulse Logo" width="120" height="120">
+  <img src="logo.svg" alt="Atlas Hive Logo" width="400">
   <br>
-  <b>A high-performance, aesthetic system utility for macOS.</b>
+  <b>The Command Center for your macOS Ecosystem.</b>
   <br>
-  <i>Monitor. Manage. Protect.</i>
+  <i>Total Surveillance. Absolute Privacy. Minimalist Design.</i>
 </p>
 
 ---
 
-## ⚡ Key Features
+## ⬢ The Hive Overview
+**Atlas Hive** is a premium system utility that bridges the gap between hardware monitoring and privacy management. Built with a "Noir-Amber" aesthetic, it provides a high-contrast, data-rich environment for power users who need to see everything at a glance.
+
+---
+
+## ⚡ Core Modules
 
 ### 📊 Real-Time System Monitoring
-* **Performance Tracking**: Granular CPU utilization (overall & per-core).
-* **Memory Metrics**: Real-time RAM analytics and pressure monitoring.
-* **Network Activity**: Live upload/download throughput tracking.
-* **Storage & Power**: Monitor disk capacity and battery health/charging states.
-* **Menu Bar Mini**: Choose between minimal text metrics or sleek mini-graphs.
-* **Custom Intervals**: Adjust refresh rates to balance detail and efficiency.
+* **CPU Insight**: Track overall utilization and per-core activity.
+* **Memory Analytics**: Real-time RAM metrics and pressure sensing.
+* **Network Flux**: Monitor live upload/download throughput.
+* **Menu Bar Display**: Toggle between clean text metrics or mini-graph visualizations.
 
-### 🛠️ Built-in Task Manager
-* **Deep Insight**: View all running processes with per-app resource consumption.
-* **Smart Sorting**: Filter by name, CPU, or Memory usage with a click.
-* **Quick Search**: Find specific processes instantly.
-* **Process Control**: Force-kill or restart unresponsive apps with a single click.
-* **3s Heartbeat**: Optimized refresh cycle for the perfect balance of accuracy and CPU load.
+### 🛠️ Precision Task Manager
+* **Process Transparency**: View all active processes with detailed resource consumption.
+* **Smart Filtering**: Sort instantly by name, CPU, or Memory usage.
+* **Total Control**: Kill or restart processes with a single click.
+* **3s Update Cycle**: Optimized for high-accuracy tracking.
 
-### 🛡️ Privacy & Security
-* **Camera Kill-Switch**: Instantly revoke camera permissions for all applications.
-* **Mic Management**: System-wide control over microphone access.
-* **USB Security**: Insight into connected devices and management status.
-* **One-Click Lock**: Secure your workspace privacy via macOS TCC integration.
+### 🛡️ Privacy Shield
+* **Camera Management**: Instantly revoke camera permissions system-wide.
+* **Microphone Control**: One-click access management for all apps.
+* **TCC Integration**: Secure, native-level control over your system’s sensors.
 
 ---
 
-## 🎨 Aesthetic & UI
-Pulse is designed with a **Midnight & Amber** palette, optimized for Dark Mode and OLED displays.
+## 🎨 Aesthetic Customization
 
-| Feature | Description |
+| Feature | Capability |
 | :--- | :--- |
-| **Black & Orange Theme** | High-contrast visual style for maximum legibility. |
-| **Modular Layout** | Drag-and-drop sections to customize your dashboard. |
-| **Menu Bar Config** | Toggle specific metrics on or off to keep your status bar clean. |
-| **Ultra-Lightweight** | Written in Swift for minimal energy impact and silent background operation. |
+| **Amber Theme** | Optimized Black & Orange palette for high-end setups. |
+| **Dynamic Dashboard** | Drag-and-drop sections to reorder your hive layout. |
+| **Minimal Footprint** | Lightweight Swift architecture. |
 
 ---
 
-## 🚀 Installation
+## 🚀 Deployment
 
-1.  **Download**: Grab the latest `.dmg` from the [Releases](https://github.com/yourlink/releases) page.
-2.  **Install**: Drag `Pulse.app` to your `/Applications` folder.
-3.  **Permissions**: Grant **Accessibility** and **Full Disk Access** in System Settings to enable Privacy Shield features.
-
----
-
-## 🛠 Tech Stack
-* **Language**: Swift / SwiftUI
-* **API**: macOS TCC (Transparency, Consent, and Control) Database
-* **Performance**: Low-overhead C-bindings for hardware telemetry
-
----
-
-## 🤝 Contributing
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. **Download**: [Latest Release](https://github.com/yourlink/releases)
+2. **Installation**: Move `Atlas Hive.app` to your `/Applications` folder.
+3. **Authorization**: Grant **Accessibility** and **Full Disk Access** in System Settings.
 
 ---
 
 <p align="center">
-  Built with 🧡 for the macOS Community.
+  Designed for the <b>Atlas Hive</b>. Built for Performance. 🧡
 </p>
