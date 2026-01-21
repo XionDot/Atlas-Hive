@@ -1,7 +1,7 @@
 # 🟠 Atlas Hive
 
 <p align="center">
-  <img src="logo.svg" alt="Atlas Hive Logo" width="400">
+  <img src="logos.svg" alt="Atlas Hive Logo" width="400">
   <br>
   <b>The Command Center for your macOS Ecosystem.</b>
   <br>
