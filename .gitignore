@@ -1,36 +1,7 @@
-# Swift Package Manager
-.build/
-.swiftpm/
-*.xcodeproj
-*.xcworkspace
-Package.resolved
+# Exclude everything
+*
 
-# macOS
-.DS_Store
-DerivedData/
-*.swp
-*.swo
-*~
-
-# Config (user-specific)
-config.json
-
-# Build artifacts
-*.app
-*.dSYM.zip
-*.dSYM
-build/
-
-# IDE
-.vscode/
-.idea/
-
-# Optional: releases (uncomment to exclude from git)
-# releases/
-
-# Logs and temporary files
-*.log
-*logs.txt
-console*.txt
-error.txt
-appcrash.txt
+# Except these files
+!.gitignore
+!README.md
+!LICENSE
